@@ -62,3 +62,4 @@ alias countimages="find . -name '*.png' -o -name '*.jpg' -o -name '*.gif' | wc -
 alias deleteds="find . -name '.DS_Store' -print -exec rm {} ';'"
 
 echo "load zprofile"
+
