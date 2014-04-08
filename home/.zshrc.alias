@@ -9,7 +9,6 @@ alias bemm="bundle exec middleman"
 
 alias skitch="open -a skitch"
 alias st="open -a sourcetree"
-alias mail="open -a mail"
 alias codekit="open -a codekit"
 alias ios="open /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Applications/iPhone\ Simulator.app"
 alias mou="open -a mou"
@@ -19,13 +18,7 @@ alias code="cd workspace/code"
 alias cdmampconf="cd /Applications/MAMP/conf/apache/"
 alias dev="cd ~/workspace/dev/"
 alias kyodo="cd ~/workspace/dev/kyodo/"
-
-# ftp
-alias ftpheteml="ftp ftp178.heteml.jp"
-
-# scp
-alias scpasmileup="scp -P 2222 -r dev/asmile  wayout360@ssh178.heteml.jp:web/daaishi/test/"
-
+alias of="cd ~/workspace/code/oF/"
 
 # show hidden-files
 alias hfon="defaults write com.apple.finder AppleShowAllFiles true|killall Finder"
@@ -46,3 +39,6 @@ alias countimages="find . -name '*.png' -o -name '*.jpg' -o -name '*.gif' | wc -
 
 # delete .DS_Store
 alias deleteds="find . -name '.DS_Store' -print -exec rm {} ';'"
+
+# wordpress
+alias themes="cd wp-content/themes/"
