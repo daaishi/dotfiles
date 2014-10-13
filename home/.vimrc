@@ -10,6 +10,11 @@ let $VIM = expand('~/.vim')
 let $CACHE = $VIM.'/.cache'
 let $BUNDLE = $VIM.'/bundle'
 let s:neobundle_dir = $BUNDLE.'/neobundle.vim'
+
+let mapleader = ","
+" ,のデフォルトの機能は、\で使えるように退避
+noremap \  ,
+
 augroup Vimrc
   autocmd!
 augroup END
@@ -177,6 +182,7 @@ NeoBundle 'Shougo/neocomplete.vim', {'disabled': !(has('lua') && v:version > 703
   " https://github.com/c9s/perlomni.vim
   let g:neocomplete#sources#omni#input_patterns.perl = '\h\w*->\h\w*\|\h\w*::'
 
+
 " Unite
 NeoBundle 'Shougo/unite.vim'
   let g:unite_enable_start_insert=1
@@ -250,21 +256,22 @@ NeoBundle 'mattn/emmet-vim'
     augroup END
 NeoBundle 'hail2u/vim-css3-syntax'
 NeoBundle 'pangloss/vim-javascript'
-NeoBundle 'taichouchou2/html5.vim'
-  syn keyword htmlTagName contained article aside audio bb canvas command
-  syn keyword htmlTagName contained datalist details dialog embed figure
-  syn keyword htmlTagName contained header hgroup keygen mark meter nav output
-  syn keyword htmlTagName contained progress time ruby rt rp section time
-  syn keyword htmlTagName contained source figcaption
-  syn keyword htmlArg contained autofocus autocomplete placeholder min max
-  syn keyword htmlArg contained contenteditable contextmenu draggable hidden
-  syn keyword htmlArg contained itemprop list sandbox subject spellcheck
-  syn keyword htmlArg contained novalidate seamless pattern formtarget
-  syn keyword htmlArg contained formaction formenctype formmethod
-  syn keyword htmlArg contained sizes scoped async reversed sandbox srcdoc
-  syn keyword htmlArg contained hidden role
-  syn match   htmlArg "\<\(aria-[\-a-zA-Z0-9_]\+\)=" contained
-  syn match   htmlArg contained "\s*data-[-a-zA-Z0-9_]\+"
+NeoBundle 'othree/html5.vim'
+" NeoBundle 'taichouchou2/html5.vim'
+"   syn keyword htmlTagName contained article aside audio bb canvas command
+"   syn keyword htmlTagName contained datalist details dialog embed figure
+"   syn keyword htmlTagName contained header hgroup keygen mark meter nav output
+"   syn keyword htmlTagName contained progress time ruby rt rp section time
+"   syn keyword htmlTagName contained source figcaption
+"   syn keyword htmlArg contained autofocus autocomplete placeholder min max
+"   syn keyword htmlArg contained contenteditable contextmenu draggable hidden
+"   syn keyword htmlArg contained itemprop list sandbox subject spellcheck
+"   syn keyword htmlArg contained novalidate seamless pattern formtarget
+"   syn keyword htmlArg contained formaction formenctype formmethod
+"   syn keyword htmlArg contained sizes scoped async reversed sandbox srcdoc
+"   syn keyword htmlArg contained hidden role
+"   syn match   htmlArg "\<\(aria-[\-a-zA-Z0-9_]\+\)=" contained
+"   syn match   htmlArg contained "\s*data-[-a-zA-Z0-9_]\+"
 NeoBundle 'jelera/vim-javascript-syntax'
 NeoBundle 'felixge/vim-nodejs-errorformat'
 NeoBundle 'moll/vim-node'
@@ -276,37 +283,43 @@ NeoBundle 'open-browser.vim'
   nmap <Leader>o <Plug>(openbrowser-open)
   vmap <Leader>o <Plug>(openbrowser-open)
   nnoremap <Leader>g :<C-u>OpenBrowserSearch<Space><C-r><C-w><Enter>
-NeoBundle 'scrooloose/nerdtree'
-NeoBundle 'jistr/vim-nerdtree-tabs'
-  " 引数なしで実行したとき、NERDTreeを実行する
-  let file_name = expand("%:p")
-  if has('vim_starting') &&  file_name == ""
-      autocmd VimEnter * call ExecuteNERDTree()
-  endif
-  " カーソルが外れているときは自動的にnerdtreeを隠す
-  function! ExecuteNERDTree()
-      "b:nerdstatus = 1 : NERDTree 表示中
-      "b:nerdstatus = 2 : NERDTree 非表示中
-      if !exists('g:nerdstatus')
-          execute 'NERDTree ./'
-          let g:windowWidth = winwidth(winnr())
-          let g:nerdtreebuf = bufnr('')
-          let g:nerdstatus = 1 
-      elseif g:nerdstatus == 1 
-          execute 'wincmd t'
-          execute 'vertical resize' 0 
-          execute 'wincmd p'
-          let g:nerdstatus = 2 
-      elseif g:nerdstatus == 2 
-          execute 'wincmd t'
-          execute 'vertical resize' g:windowWidth
-          let g:nerdstatus = 1 
-      endif
-  endfunction
-  noremap <c-e> :<c-u>:call ExecuteNERDTree()<cr>
 
+NeoBundle 'Shougo/vimfiler.vim'
+nnoremap <leader>e :VimFilerExplore -split -winwidth=30 -find -no-quit<Cr>
 
-NeoBundle "Shougo/vimfiler.vim"
+" NeoBundle 'scrooloose/nerdtree'
+" NeoBundle 'jistr/vim-nerdtree-tabs'
+"   " 引数なしで実行したとき、NERDTreeを実行する
+"   let file_name = expand("%:p")
+"   if has('vim_starting') &&  file_name == ""
+"       autocmd VimEnter * call ExecuteNERDTree()
+"   endif
+"   " カーソルが外れているときは自動的にnerdtreeを隠す
+"   function! ExecuteNERDTree()
+"       "b:nerdstatus = 1 : NERDTree 表示中
+"       "b:nerdstatus = 2 : NERDTree 非表示中
+"       if !exists('g:nerdstatus')
+"           execute 'NERDTree ./'
+"           let g:windowWidth = winwidth(winnr())
+"           let g:nerdtreebuf = bufnr('')
+"           let g:nerdstatus = 1 
+"       elseif g:nerdstatus == 1 
+"           execute 'wincmd t'
+"           execute 'vertical resize' 0 
+"           execute 'wincmd p'
+"           let g:nerdstatus = 2 
+"       elseif g:nerdstatus == 2 
+"           execute 'wincmd t'
+"           execute 'vertical resize' g:windowWidth
+"           let g:nerdstatus = 1 
+"       endif
+"   endfunction
+"   noremap <c-e> :<c-u>:call ExecuteNERDTree()<cr>
+
+NeoBundle 'glsl.vim'
+  autocmd BufNewFile,BufRead *.frag,*.vert,*.fp,*.vp,*.glsl
+    \ set filetype=glsl
+
 NeoBundle 'h1mesuke/unite-outline'
 NeoBundle 'mattn/webapi-vim'
 NeoBundle 'tell-k/vim-browsereload-mac'
@@ -317,6 +330,58 @@ NeoBundle 'tpope/vim-rails'
 NeoBundle 'sophacles/vim-processing'
 NeoBundle 'vim-scripts/sudo.vim'
 NeoBundle 'digitaltoad/vim-jade'
+
+NeoBundle 'osyo-manga/vim-over'
+"" vim-over {{{
+" vim-overの起動
+nnoremap <silent> <Leader>m :OverCommandLine<CR>
+" カーソル下の単語をハイライト付きで置換
+nnoremap sub :OverCommandLine<CR>%s/<C-r><C-w>//g<Left><Left>
+" コピーした文字列をハイライト付きで置換
+ nnoremap subp y:OverCommandLine<CR>%s!<C-r>=substitute(@0, '!', '\\!', 'g')<CR>!!gI<Left><Left><Left>
+" }}}
+
+NeoBundle 'fuenor/qfixhowm.git'
+" {{{
+"QFixHowmキーマップ
+let QFixHowm_Key = 'g'
+
+""howm_dirはファイルを保存したいディレクトリを設定。
+let howm_dir             = '~/ownCloud/workspace/memo'
+let howm_filename        = '%Y/%m/%Y-%m-%d-%H%M%S.md'
+let howm_fileencoding    = 'utf-8'
+let howm_fileformat      = 'unix'
+" ファイルタイプをmarkdownにする
+let QFixHowm_FileType = 'markdown'
+" タイトル記号
+let QFixHowm_Title = '#'
+" タイトル行検索正規表現の辞書を初期化
+let QFixMRU_Title = {}
+" MRUでタイトル行とみなす正規表現(Vimの正規表現で指定)
+let QFixMRU_Title['mkd'] = '^###[^#]'
+" grepでタイトル行とみなす正規表現(使用するgrepによっては変更する必要があります)
+let QFixMRU_Title['mkd_regxp'] = '^###[^#]'
+
+let QFixHowm_DiaryFile = 'diary/%Y/%m/%Y-%m-%d-000000.md'
+" }}}
+
+
+NeoBundle 'kana/vim-submode'
+
+" Indent
+NeoBundle 'Yggdroot/indentLine'
+let g:indentLine_faster = 1
+nmap <silent><Leader>i :<C-u>IndentLinesToggle<CR>
+
+" Text align
+NeoBundle 'junegunn/vim-easy-align'
+
+NeoBundle 'mhinz/vim-startify'
+
+" markdown
+NeoBundle 'godlygeek/tabular'
+NeoBundle 'plasticboy/vim-markdown'
+
 endif
 NeoBundleCheck
 " }}}
@@ -444,3 +509,40 @@ map <silent> [Tag]n :tabnext<CR>
 map <silent> [Tag]p :tabprevious<CR>
 " tp 前のタブ
 " }}}
+
+" vim-submode
+nnoremap s <Nop>
+nnoremap sj <C-w>j
+nnoremap sk <C-w>k
+nnoremap sl <C-w>l
+nnoremap sh <C-w>h
+nnoremap sJ <C-w>J
+nnoremap sK <C-w>K
+nnoremap sL <C-w>L
+nnoremap sH <C-w>H
+nnoremap sn gt
+nnoremap sp gT
+nnoremap sr <C-w>r
+nnoremap s= <C-w>=
+nnoremap sw <C-w>w
+nnoremap so <C-w>_<C-w>|
+nnoremap sO <C-w>=
+nnoremap sN :<C-u>bn<CR>
+nnoremap sP :<C-u>bp<CR>
+nnoremap st :<C-u>tabnew<CR>
+nnoremap sT :<C-u>Unite tab<CR>
+nnoremap ss :<C-u>sp<CR>
+nnoremap sv :<C-u>vs<CR>
+nnoremap sq :<C-u>q<CR>
+nnoremap sQ :<C-u>bd<CR>
+nnoremap sb :<C-u>Unite buffer_tab -buffer-name=file<CR>
+nnoremap sB :<C-u>Unite buffer -buffer-name=file<CR>
+
+call submode#enter_with('bufmove', 'n', '', 's>', '<C-w>>')
+call submode#enter_with('bufmove', 'n', '', 's<', '<C-w><')
+call submode#enter_with('bufmove', 'n', '', 's+', '<C-w>+')
+call submode#enter_with('bufmove', 'n', '', 's-', '<C-w>-')
+call submode#map('bufmove', 'n', '', '>', '<C-w>>')
+call submode#map('bufmove', 'n', '', '<', '<C-w><')
+call submode#map('bufmove', 'n', '', '+', '<C-w>+')
+call submode#map('bufmove', 'n', '', '-', '<C-w>-')
