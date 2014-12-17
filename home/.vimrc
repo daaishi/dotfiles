@@ -36,66 +36,138 @@ NeoBundleFetch 'Shougo/neobundle.vim'
 
 " LightLine
 NeoBundle 'itchyny/lightline.vim'
-  if !has('gui_running')
-    set t_Co=256
-  endif
-  let g:lightline = {
-          \ 'colorscheme': 'solarized',
-          \ 'mode_map': {'c': 'NORMAL'},
-          \ 'active': {
-          \   'left': [ [ 'mode', 'paste' ], [ 'fugitive', 'filename' ] ]
-          \ },
-          \ 'component_function': {
-          \   'modified': 'MyModified',
-          \   'readonly': 'MyReadonly',
-          \   'fugitive': 'MyFugitive',
-          \   'filename': 'MyFilename',
-          \   'fileformat': 'MyFileformat',
-          \   'filetype': 'MyFiletype',
-          \   'fileencoding': 'MyFileencoding',
-          \   'mode': 'MyMode'
-          \ }
-          \ }
-  function! MyModified()
-    return &ft =~ 'help\|vimfiler\|gundo' ? '' : &modified ? '+' : &modifiable ? '' : '-'
-  endfunction
-  function! MyReadonly()
-    return &ft !~? 'help\|vimfiler\|gundo' && &readonly ? 'x' : ''
-  endfunction
-  function! MyFilename()
-    return ('' != MyReadonly() ? MyReadonly() . ' ' : '') .
-          \ (&ft == 'vimfiler' ? vimfiler#get_status_string() :
-          \  &ft == 'unite' ? unite#get_status_string() :
-          \  &ft == 'vimshell' ? vimshell#get_status_string() :
-          \ '' != expand('%:t') ? expand('%:t') : '[No Name]') .
-          \ ('' != MyModified() ? ' ' . MyModified() : '')
-  endfunction
-  function! MyFugitive()
-    try
-      if &ft !~? 'vimfiler\|gundo' && exists('*fugitive#head')
-        return fugitive#head()
-      endif
-    catch
-    endtry
-    return ''
-  endfunction
-  function! MyFileformat()
-    return winwidth(0) > 70 ? &fileformat : ''
-  endfunction
-  function! MyFiletype()
-    return winwidth(0) > 70 ? (strlen(&filetype) ? &filetype : 'no ft') : ''
-  endfunction
-  function! MyFileencoding()
-    return winwidth(0) > 70 ? (strlen(&fenc) ? &fenc : &enc) : ''
-  endfunction
-  function! MyMode()
-    return winwidth(0) > 60 ? lightline#mode() : ''
-  endfunction
+" let g:lightline = {
+"       \ 'colorscheme': 'solarized',
+"       \ 'active': {
+"       \   'left': [ [ 'mode', 'paste' ], [ 'fugitive', 'filename' ], ['ctrlpmark'] ],
+"       \   'right': [ [ 'syntastic', 'lineinfo' ], ['percent'], [ 'fileformat', 'fileencoding', 'filetype' ] ]
+"       \ },
+"       \ 'component_function': {
+"       \   'fugitive': 'MyFugitive',
+"       \   'filename': 'MyFilename',
+"       \   'fileformat': 'MyFileformat',
+"       \   'filetype': 'MyFiletype',
+"       \   'fileencoding': 'MyFileencoding',
+"       \   'mode': 'MyMode',
+"       \   'ctrlpmark': 'CtrlPMark',
+"       \ },
+"       \ 'component_expand': {
+"       \   'syntastic': 'SyntasticStatuslineFlag',
+"       \ },
+"       \ 'component_type': {
+"       \   'syntastic': 'error',
+"       \ },
+"       \ 'separator': { 'left': '⮀', 'right': '⮂' },
+"       \ 'subseparator': { 'left': '⮁', 'right': '⮃' }
+"       \ }
+let g:lightline = {
+      \ 'colorscheme': 'solarized'
+      \ }
 
-" solarized
-" NeoBundle 'altercation/vim-colors-solarized'
-  " set background=light
-  " colorscheme solarized
+function! MyModified()
+  return &ft =~ 'help' ? '' : &modified ? '+' : &modifiable ? '' : '-'
+endfunction
+
+function! MyReadonly()
+  return &ft !~? 'help' && &readonly ? 'RO' : ''
+endfunction
+
+function! MyFilename()
+  let fname = expand('%:t')
+  return fname == 'ControlP' ? g:lightline.ctrlp_item :
+        \ fname == '__Tagbar__' ? g:lightline.fname :
+        \ fname =~ '__Gundo\|NERD_tree' ? '' :
+        \ &ft == 'vimfiler' ? vimfiler#get_status_string() :
+        \ &ft == 'unite' ? unite#get_status_string() :
+        \ &ft == 'vimshell' ? vimshell#get_status_string() :
+        \ ('' != MyReadonly() ? MyReadonly() . ' ' : '') .
+        \ ('' != fname ? fname : '[No Name]') .
+        \ ('' != MyModified() ? ' ' . MyModified() : '')
+endfunction
+
+function! MyFugitive()
+  try
+    if expand('%:t') !~? 'Tagbar\|Gundo\|NERD' && &ft !~? 'vimfiler' && exists('*fugitive#head')
+      let mark = ''  " edit here for cool mark
+      let _ = fugitive#head()
+      return strlen(_) ? mark._ : ''
+    endif
+  catch
+  endtry
+  return ''
+endfunction
+
+function! MyFileformat()
+  return winwidth(0) > 70 ? &fileformat : ''
+endfunction
+
+function! MyFiletype()
+  return winwidth(0) > 70 ? (strlen(&filetype) ? &filetype : 'no ft') : ''
+endfunction
+
+function! MyFileencoding()
+  return winwidth(0) > 70 ? (strlen(&fenc) ? &fenc : &enc) : ''
+endfunction
+
+function! MyMode()
+  let fname = expand('%:t')
+  return fname == '__Tagbar__' ? 'Tagbar' :
+        \ fname == 'ControlP' ? 'CtrlP' :
+        \ fname == '__Gundo__' ? 'Gundo' :
+        \ fname == '__Gundo_Preview__' ? 'Gundo Preview' :
+        \ fname =~ 'NERD_tree' ? 'NERDTree' :
+        \ &ft == 'unite' ? 'Unite' :
+        \ &ft == 'vimfiler' ? 'VimFiler' :
+        \ &ft == 'vimshell' ? 'VimShell' :
+        \ winwidth(0) > 60 ? lightline#mode() : ''
+endfunction
+
+function! CtrlPMark()
+  if expand('%:t') =~ 'ControlP'
+    call lightline#link('iR'[g:lightline.ctrlp_regex])
+    return lightline#concatenate([g:lightline.ctrlp_prev, g:lightline.ctrlp_item
+          \ , g:lightline.ctrlp_next], 0)
+  else
+    return ''
+  endif
+endfunction
+
+let g:ctrlp_status_func = {
+  \ 'main': 'CtrlPStatusFunc_1',
+  \ 'prog': 'CtrlPStatusFunc_2',
+  \ }
+
+function! CtrlPStatusFunc_1(focus, byfname, regex, prev, item, next, marked)
+  let g:lightline.ctrlp_regex = a:regex
+  let g:lightline.ctrlp_prev = a:prev
+  let g:lightline.ctrlp_item = a:item
+  let g:lightline.ctrlp_next = a:next
+  return lightline#statusline(0)
+endfunction
+
+function! CtrlPStatusFunc_2(str)
+  return lightline#statusline(0)
+endfunction
+
+let g:tagbar_status_func = 'TagbarStatusFunc'
+
+function! TagbarStatusFunc(current, sort, fname, ...) abort
+    let g:lightline.fname = a:fname
+  return lightline#statusline(0)
+endfunction
+
+augroup AutoSyntastic
+  autocmd!
+  autocmd BufWritePost *.c,*.cpp call s:syntastic()
+augroup END
+function! s:syntastic()
+  SyntasticCheck
+  call lightline#update()
+endfunction
+
+let g:unite_force_overwrite_statusline = 0
+let g:vimfiler_force_overwrite_statusline = 0
+let g:vimshell_force_overwrite_statusline = 0
 
 " Complement
 NeoBundle 'Shougo/neocomplete.vim', {'disabled': !(has('lua') && v:version > 703)}
@@ -182,55 +254,6 @@ NeoBundle 'Shougo/neocomplete.vim', {'disabled': !(has('lua') && v:version > 703
   " https://github.com/c9s/perlomni.vim
   let g:neocomplete#sources#omni#input_patterns.perl = '\h\w*->\h\w*\|\h\w*::'
 
-
-" Unite
-NeoBundle 'Shougo/unite.vim'
-  let g:unite_enable_start_insert=1
-  let g:unite_source_history_yank_enable =1
-  let g:unite_source_file_mru_limit = 200
-  nnoremap <silent> ,uy :<C-u>Unite history/yank<CR>
-  nnoremap <silent> ,ub :<C-u>Unite buffer<CR>
-  nnoremap <silent> ,uf :<C-u>UniteWithBufferDir -buffer-name=files file<CR>
-  nnoremap <silent> ,ur :<C-u>Unite -buffer-name=register register<CR>
-  nnoremap <silent> ,uu :<C-u>Unite file_mru buffer<CR>
-
-" Commenter / Utility / Matching ( "," )
-NeoBundle 'tpope/vim-surround'
-NeoBundle 'tComment'
-  let g:tcommentMapLeader1 = '<C-_>' 
-  let g:tcommentMapLeader2 = '<Leader>'
-  let g:tcommentMapLeaderOp1 = 'gc'
-  let g:tcommentMapLeaderOp2 = 'gC'
-  " tcommentで使用する形式を追加
-  if !exists('g:tcomment_types')
-    let g:tcomment_types = {}
-  endif
-  let g:tcomment_types = {
-        \'php_surround' : "<?php %s ?>",
-        \'eruby_surround' : "<%% %s %%>",
-        \'eruby_surround_minus' : "<%% %s -%%>",
-        \'eruby_surround_equality' : "<%%= %s %%>",
-  \}
-  " マッピングを追加
-  function! SetErubyMapping2()
-    nmap <buffer> <C-_>c :TCommentAs eruby_surround<CR>
-    nmap <buffer> <C-_>- :TCommentAs eruby_surround_minus<CR>
-    nmap <buffer> <C-_>= :TCommentAs eruby_surround_equality<CR>
-    vmap <buffer> <C-_>c :TCommentAs eruby_surround<CR>
-    vmap <buffer> <C-_>- :TCommentAs eruby_surround_minus<CR>
-    vmap <buffer> <C-_>= :TCommentAs eruby_surround_equality<CR>
-  endfunction
-  " erubyのときだけ設定を追加
-  au FileType eruby call SetErubyMapping2()
-  " phpのときだけ設定を追加
-  au FileType php nmap <buffer><C-_>c :TCommentAs php_surround<CR>
-  au FileType php vmap <buffer><C-_>c :TCommentAs php_surround<CR>
-NeoBundleLazy 'Align', {'autoload': {'commands': [{'name': 'Align'}]}}
-NeoBundle 'autodate.vim'
-  let g:autodate_format = '%Y/%m/%d %H:%M:%S'
-NeoBundleLazy 'sjl/gundo.vim', {'autoload': {'commands': [{'name': 'GundoToggle'}]}, 'disabled': !has('python')}
-  nnoremap <Leader>gu :<C-u>GundoToggle<CR>
-
 " syntax
 NeoBundle 'scrooloose/syntastic'
 NeoBundle 'mattn/emmet-vim'
@@ -284,43 +307,43 @@ NeoBundle 'open-browser.vim'
   vmap <Leader>o <Plug>(openbrowser-open)
   nnoremap <Leader>g :<C-u>OpenBrowserSearch<Space><C-r><C-w><Enter>
 
-NeoBundle 'Shougo/vimfiler.vim'
-nnoremap <leader>e :VimFilerExplore -split -winwidth=30 -find -no-quit<Cr>
+" NeoBundle 'Shougo/vimfiler.vim'
+" nnoremap <leader>e :VimFilerExplore -split -winwidth=30 -find -no-quit<Cr>
+" let g:vimfiler_edit_action = 'tabopen'
 
-" NeoBundle 'scrooloose/nerdtree'
-" NeoBundle 'jistr/vim-nerdtree-tabs'
-"   " 引数なしで実行したとき、NERDTreeを実行する
-"   let file_name = expand("%:p")
-"   if has('vim_starting') &&  file_name == ""
-"       autocmd VimEnter * call ExecuteNERDTree()
-"   endif
-"   " カーソルが外れているときは自動的にnerdtreeを隠す
-"   function! ExecuteNERDTree()
-"       "b:nerdstatus = 1 : NERDTree 表示中
-"       "b:nerdstatus = 2 : NERDTree 非表示中
-"       if !exists('g:nerdstatus')
-"           execute 'NERDTree ./'
-"           let g:windowWidth = winwidth(winnr())
-"           let g:nerdtreebuf = bufnr('')
-"           let g:nerdstatus = 1 
-"       elseif g:nerdstatus == 1 
-"           execute 'wincmd t'
-"           execute 'vertical resize' 0 
-"           execute 'wincmd p'
-"           let g:nerdstatus = 2 
-"       elseif g:nerdstatus == 2 
-"           execute 'wincmd t'
-"           execute 'vertical resize' g:windowWidth
-"           let g:nerdstatus = 1 
-"       endif
-"   endfunction
-"   noremap <c-e> :<c-u>:call ExecuteNERDTree()<cr>
+NeoBundle 'scrooloose/nerdtree'
+NeoBundle 'jistr/vim-nerdtree-tabs'
+  " 引数なしで実行したとき、NERDTreeを実行する
+  let file_name = expand("%:p")
+  if has('vim_starting') &&  file_name == ""
+      autocmd VimEnter * call ExecuteNERDTree()
+  endif
+  " カーソルが外れているときは自動的にnerdtreeを隠す
+  function! ExecuteNERDTree()
+      "b:nerdstatus = 1 : NERDTree 表示中
+      "b:nerdstatus = 2 : NERDTree 非表示中
+      if !exists('g:nerdstatus')
+          execute 'NERDTree ./'
+          let g:windowWidth = winwidth(winnr())
+          let g:nerdtreebuf = bufnr('')
+          let g:nerdstatus = 1 
+      elseif g:nerdstatus == 1 
+          execute 'wincmd t'
+          execute 'vertical resize' 0 
+          execute 'wincmd p'
+          let g:nerdstatus = 2 
+      elseif g:nerdstatus == 2 
+          execute 'wincmd t'
+          execute 'vertical resize' g:windowWidth
+          let g:nerdstatus = 1 
+      endif
+  endfunction
+  noremap <c-e> :<c-u>:call ExecuteNERDTree()<cr>
 
 NeoBundle 'glsl.vim'
   autocmd BufNewFile,BufRead *.frag,*.vert,*.fp,*.vp,*.glsl
     \ set filetype=glsl
 
-NeoBundle 'h1mesuke/unite-outline'
 NeoBundle 'mattn/webapi-vim'
 NeoBundle 'tell-k/vim-browsereload-mac'
 NeoBundle 'jeyb/vim-jst'
@@ -381,6 +404,44 @@ NeoBundle 'mhinz/vim-startify'
 " markdown
 NeoBundle 'godlygeek/tabular'
 NeoBundle 'plasticboy/vim-markdown'
+
+" grunt
+NeoBundle 'mklabs/grunt.vim'
+
+" less
+NeoBundle 'groenewege/vim-less'
+
+" コメントアウト系プラグイン
+NeoBundle 'tomtom/tcomment_vim'
+" tcommentで使用する形式を追加
+if !exists('g:tcomment_types')
+  let g:tcomment_types = {}
+endif
+let g:tcomment_types = {
+      \'php_surround' : "<?php %s ?>",
+      \'eruby_surround' : "<%% %s %%>",
+      \'eruby_surround_minus' : "<%% %s -%%>",
+      \'eruby_surround_equality' : "<%%= %s %%>",
+\}
+" マッピングを追加
+function! SetErubyMapping2()
+  nmap <buffer> <C-_>c :TCommentAs eruby_surround<CR>
+  nmap <buffer> <C-_>- :TCommentAs eruby_surround_minus<CR>
+  nmap <buffer> <C-_>= :TCommentAs eruby_surround_equality<CR>
+
+  vmap <buffer> <C-_>c :TCommentAs eruby_surround<CR>
+  vmap <buffer> <C-_>- :TCommentAs eruby_surround_minus<CR>
+  vmap <buffer> <C-_>= :TCommentAs eruby_surround_equality<CR>
+endfunction
+" erubyのときだけ設定を追加
+au FileType eruby call SetErubyMapping2()
+" phpのときだけ設定を追加
+au FileType php nmap <buffer><C-_>c :TCommentAs php_surround<CR>
+au FileType php vmap <buffer><C-_>c :TCommentAs php_surround<CR>
+" caw.vim.git
+" NeoBundle "tyru/caw.vim.git"
+" nmap <C-K> <Plug>(caw:i:toggle)
+" vmap <C-K> <Plug>(caw:i:toggle)
 
 endif
 NeoBundleCheck
@@ -546,3 +607,4 @@ call submode#map('bufmove', 'n', '', '>', '<C-w>>')
 call submode#map('bufmove', 'n', '', '<', '<C-w><')
 call submode#map('bufmove', 'n', '', '+', '<C-w>+')
 call submode#map('bufmove', 'n', '', '-', '<C-w>-')
+

@@ -14,3 +14,5 @@ eval "$(rbenv init -)"
 export OPENNI2_INCLUDE=/usr/local/include/ni2
 export OPENNI2_REDIST=/usr/local/lib/ni2
 
+# neovim
+export VIMRUNTIME=/usr/local/share/vim/vim74
