@@ -1,4 +1,8 @@
-" {{{
+" release autogroup in MyAutoCmd
+augroup MyAutoCmd
+  autocmd!
+augroup END
+
 filetype off
 scriptencoding utf-8
 if !executable(&shell) | set shell=sh | endif
@@ -15,442 +19,7 @@ let mapleader = ","
 " ,のデフォルトの機能は、\で使えるように退避
 noremap \  ,
 
-augroup Vimrc
-  autocmd!
-augroup END
-" }}}
-
-" {{{
-" neobundle
-if !isdirectory(s:neobundle_dir)
-  if executable('git')
-    exec '!mkdir -p '.$BUNDLE.' && git clone https://github.com/Shougo/neobundle.vim '.s:neobundle_dir
-  endif
-else
-if has('vim_starting')
-  execute 'set runtimepath+='.s:neobundle_dir
-endif
-call neobundle#rc($BUNDLE)
-NeoBundleFetch 'Shougo/neobundle.vim'
-  nnoremap <silent> BB :<C-u>Unite neobundle/update -log -no-start-insert<CR>
-
-" LightLine
-NeoBundle 'itchyny/lightline.vim'
-" let g:lightline = {
-"       \ 'colorscheme': 'solarized',
-"       \ 'active': {
-"       \   'left': [ [ 'mode', 'paste' ], [ 'fugitive', 'filename' ], ['ctrlpmark'] ],
-"       \   'right': [ [ 'syntastic', 'lineinfo' ], ['percent'], [ 'fileformat', 'fileencoding', 'filetype' ] ]
-"       \ },
-"       \ 'component_function': {
-"       \   'fugitive': 'MyFugitive',
-"       \   'filename': 'MyFilename',
-"       \   'fileformat': 'MyFileformat',
-"       \   'filetype': 'MyFiletype',
-"       \   'fileencoding': 'MyFileencoding',
-"       \   'mode': 'MyMode',
-"       \   'ctrlpmark': 'CtrlPMark',
-"       \ },
-"       \ 'component_expand': {
-"       \   'syntastic': 'SyntasticStatuslineFlag',
-"       \ },
-"       \ 'component_type': {
-"       \   'syntastic': 'error',
-"       \ },
-"       \ 'separator': { 'left': '⮀', 'right': '⮂' },
-"       \ 'subseparator': { 'left': '⮁', 'right': '⮃' }
-"       \ }
-let g:lightline = {
-      \ 'colorscheme': 'solarized'
-      \ }
-
-function! MyModified()
-  return &ft =~ 'help' ? '' : &modified ? '+' : &modifiable ? '' : '-'
-endfunction
-
-function! MyReadonly()
-  return &ft !~? 'help' && &readonly ? 'RO' : ''
-endfunction
-
-function! MyFilename()
-  let fname = expand('%:t')
-  return fname == 'ControlP' ? g:lightline.ctrlp_item :
-        \ fname == '__Tagbar__' ? g:lightline.fname :
-        \ fname =~ '__Gundo\|NERD_tree' ? '' :
-        \ &ft == 'vimfiler' ? vimfiler#get_status_string() :
-        \ &ft == 'unite' ? unite#get_status_string() :
-        \ &ft == 'vimshell' ? vimshell#get_status_string() :
-        \ ('' != MyReadonly() ? MyReadonly() . ' ' : '') .
-        \ ('' != fname ? fname : '[No Name]') .
-        \ ('' != MyModified() ? ' ' . MyModified() : '')
-endfunction
-
-function! MyFugitive()
-  try
-    if expand('%:t') !~? 'Tagbar\|Gundo\|NERD' && &ft !~? 'vimfiler' && exists('*fugitive#head')
-      let mark = ''  " edit here for cool mark
-      let _ = fugitive#head()
-      return strlen(_) ? mark._ : ''
-    endif
-  catch
-  endtry
-  return ''
-endfunction
-
-function! MyFileformat()
-  return winwidth(0) > 70 ? &fileformat : ''
-endfunction
-
-function! MyFiletype()
-  return winwidth(0) > 70 ? (strlen(&filetype) ? &filetype : 'no ft') : ''
-endfunction
-
-function! MyFileencoding()
-  return winwidth(0) > 70 ? (strlen(&fenc) ? &fenc : &enc) : ''
-endfunction
-
-function! MyMode()
-  let fname = expand('%:t')
-  return fname == '__Tagbar__' ? 'Tagbar' :
-        \ fname == 'ControlP' ? 'CtrlP' :
-        \ fname == '__Gundo__' ? 'Gundo' :
-        \ fname == '__Gundo_Preview__' ? 'Gundo Preview' :
-        \ fname =~ 'NERD_tree' ? 'NERDTree' :
-        \ &ft == 'unite' ? 'Unite' :
-        \ &ft == 'vimfiler' ? 'VimFiler' :
-        \ &ft == 'vimshell' ? 'VimShell' :
-        \ winwidth(0) > 60 ? lightline#mode() : ''
-endfunction
-
-function! CtrlPMark()
-  if expand('%:t') =~ 'ControlP'
-    call lightline#link('iR'[g:lightline.ctrlp_regex])
-    return lightline#concatenate([g:lightline.ctrlp_prev, g:lightline.ctrlp_item
-          \ , g:lightline.ctrlp_next], 0)
-  else
-    return ''
-  endif
-endfunction
-
-let g:ctrlp_status_func = {
-  \ 'main': 'CtrlPStatusFunc_1',
-  \ 'prog': 'CtrlPStatusFunc_2',
-  \ }
-
-function! CtrlPStatusFunc_1(focus, byfname, regex, prev, item, next, marked)
-  let g:lightline.ctrlp_regex = a:regex
-  let g:lightline.ctrlp_prev = a:prev
-  let g:lightline.ctrlp_item = a:item
-  let g:lightline.ctrlp_next = a:next
-  return lightline#statusline(0)
-endfunction
-
-function! CtrlPStatusFunc_2(str)
-  return lightline#statusline(0)
-endfunction
-
-let g:tagbar_status_func = 'TagbarStatusFunc'
-
-function! TagbarStatusFunc(current, sort, fname, ...) abort
-    let g:lightline.fname = a:fname
-  return lightline#statusline(0)
-endfunction
-
-augroup AutoSyntastic
-  autocmd!
-  autocmd BufWritePost *.c,*.cpp call s:syntastic()
-augroup END
-function! s:syntastic()
-  SyntasticCheck
-  call lightline#update()
-endfunction
-
-let g:unite_force_overwrite_statusline = 0
-let g:vimfiler_force_overwrite_statusline = 0
-let g:vimshell_force_overwrite_statusline = 0
-
-" Complement
-NeoBundle 'Shougo/neocomplete.vim', {'disabled': !(has('lua') && v:version > 703)}
-  let g:acp_enableAtStartup = 0
-  " Use neocomplete.
-  let g:neocomplete#enable_at_startup = 1
-  " Use smartcase.
-  let g:neocomplete#enable_smart_case = 1
-  " Set minimum syntax keyword length.
-  let g:neocomplete#sources#syntax#min_keyword_length = 3
-  let g:neocomplete#lock_buffer_name_pattern = '\*ku\*'
-
-  " Define dictionary.
-  let g:neocomplete#sources#dictionary#dictionaries = {
-    \ 'default' : '',
-    \ 'vimshell' : $HOME.'/.vimshell_hist',
-    \ 'scheme' : $HOME.'/.gosh_completions'
-        \ }
-
-  " Define keyword.
-  if !exists('g:neocomplete#keyword_patterns')
-    let g:neocomplete#keyword_patterns = {}
-  endif
-  let g:neocomplete#keyword_patterns['default'] = '\h\w*'
-
-  " Plugin key-mappings.
-  inoremap <expr><C-g>     neocomplete#undo_completion()
-  inoremap <expr><C-l>     neocomplete#complete_common_string()
-
-  " Recommended key-mappings.
-  " <CR>: close popup and save indent.
-  inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
-  function! s:my_cr_function()
-   return neocomplete#smart_close_popup() . "\<CR>"
-   " For no inserting <CR> key.
-   "return pumvisible() ? neocomplete#close_popup() : "\<CR>"
-  endfunction
-  " <TAB>: completion.
-  inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
-  " <C-h>, <BS>: close popup and delete backword char.
-  inoremap <expr><C-h> neocomplete#smart_close_popup()."\<C-h>"
-  inoremap <expr><BS> neocomplete#smart_close_popup()."\<C-h>"
-  inoremap <expr><C-y>  neocomplete#close_popup()
-  inoremap <expr><C-e>  neocomplete#cancel_popup()
-  " Close popup by <Space>.
-  "inoremap <expr><Space> pumvisible() ? neocomplete#close_popup() : "\<Space>"
-
-  " For cursor moving in insert mode(Not recommended)
-  "inoremap <expr><Left>  neocomplete#close_popup() . "\<Left>"
-  "inoremap <expr><Right> neocomplete#close_popup() . "\<Right>"
-  "inoremap <expr><Up>    neocomplete#close_popup() . "\<Up>"
-  "inoremap <expr><Down>  neocomplete#close_popup() . "\<Down>"
-  " Or set this.
-  "let g:neocomplete#enable_cursor_hold_i = 1
-  " Or set this.
-  "let g:neocomplete#enable_insert_char_pre = 1
-
-  " AutoComplPop like behavior.
-  "let g:neocomplete#enable_auto_select = 1
-
-  " Shell like behavior(not recommended).
-  "set completeopt+=longest
-  "let g:neocomplete#enable_auto_select = 1
-  "let g:neocomplete#disable_auto_complete = 1
-  "inoremap <expr><TAB>  pumvisible() ? "\<Down>" : "\<C-x>\<C-u>"
-
-  " Enable omni completion.
-  autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
-  autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
-  autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
-  autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
-  autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
-  autocmd FileType php setlocal omnifunc=phpcomplete#CompletePHP
-
-  " Enable heavy omni completion.
-  if !exists('g:neocomplete#sources#omni#input_patterns')
-   let g:neocomplete#sources#omni#input_patterns = {}
-  endif
-  let g:neocomplete#sources#omni#input_patterns.php = '[^. \t]->\h\w*\|\h\w*::'
-  let g:neocomplete#sources#omni#input_patterns.c = '[^.[:digit:] *\t]\%(\.\|->\)'
-  let g:neocomplete#sources#omni#input_patterns.cpp = '[^.[:digit:] *\t]\%(\.\|->\)\|\h\w*::'
-
-  " For perlomni.vim setting.
-  " https://github.com/c9s/perlomni.vim
-  let g:neocomplete#sources#omni#input_patterns.perl = '\h\w*->\h\w*\|\h\w*::'
-
-" syntax
-NeoBundle 'scrooloose/syntastic'
-NeoBundle 'mattn/emmet-vim'
-  let g:user_emmet_mode = 'iv'
-    let g:user_emmet_leader_key = '<C-Y>'
-    let g:use_emmet_complete_tag = 1
-    let g:user_emmet_settings = {
-          \ 'lang' : 'ja',
-          \ 'html' : {
-          \   'filters' : 'html',
-          \ },
-          \ 'css' : {
-          \   'filters' : 'fc',
-          \ },
-          \ 'php' : {
-          \   'extends' : 'html',
-          \   'filters' : 'html',
-          \ },
-          \}
-    augroup EmmitVim
-      autocmd!
-      autocmd FileType * let g:user_emmet_settings.indentation = '               '[:&tabstop]
-    augroup END
-NeoBundle 'hail2u/vim-css3-syntax'
-NeoBundle 'pangloss/vim-javascript'
-NeoBundle 'othree/html5.vim'
-" NeoBundle 'taichouchou2/html5.vim'
-"   syn keyword htmlTagName contained article aside audio bb canvas command
-"   syn keyword htmlTagName contained datalist details dialog embed figure
-"   syn keyword htmlTagName contained header hgroup keygen mark meter nav output
-"   syn keyword htmlTagName contained progress time ruby rt rp section time
-"   syn keyword htmlTagName contained source figcaption
-"   syn keyword htmlArg contained autofocus autocomplete placeholder min max
-"   syn keyword htmlArg contained contenteditable contextmenu draggable hidden
-"   syn keyword htmlArg contained itemprop list sandbox subject spellcheck
-"   syn keyword htmlArg contained novalidate seamless pattern formtarget
-"   syn keyword htmlArg contained formaction formenctype formmethod
-"   syn keyword htmlArg contained sizes scoped async reversed sandbox srcdoc
-"   syn keyword htmlArg contained hidden role
-"   syn match   htmlArg "\<\(aria-[\-a-zA-Z0-9_]\+\)=" contained
-"   syn match   htmlArg contained "\s*data-[-a-zA-Z0-9_]\+"
-NeoBundle 'jelera/vim-javascript-syntax'
-NeoBundle 'felixge/vim-nodejs-errorformat'
-NeoBundle 'moll/vim-node'
-NeoBundle 'myhere/vim-nodejs-complete'
-NeoBundle 'cakebaker/scss-syntax.vim'
-
-" Utilities
-NeoBundle 'open-browser.vim'
-  nmap <Leader>o <Plug>(openbrowser-open)
-  vmap <Leader>o <Plug>(openbrowser-open)
-  nnoremap <Leader>g :<C-u>OpenBrowserSearch<Space><C-r><C-w><Enter>
-
-" NeoBundle 'Shougo/vimfiler.vim'
-" nnoremap <leader>e :VimFilerExplore -split -winwidth=30 -find -no-quit<Cr>
-" let g:vimfiler_edit_action = 'tabopen'
-
-NeoBundle 'scrooloose/nerdtree'
-NeoBundle 'jistr/vim-nerdtree-tabs'
-  " 引数なしで実行したとき、NERDTreeを実行する
-  let file_name = expand("%:p")
-  if has('vim_starting') &&  file_name == ""
-      autocmd VimEnter * call ExecuteNERDTree()
-  endif
-  " カーソルが外れているときは自動的にnerdtreeを隠す
-  function! ExecuteNERDTree()
-      "b:nerdstatus = 1 : NERDTree 表示中
-      "b:nerdstatus = 2 : NERDTree 非表示中
-      if !exists('g:nerdstatus')
-          execute 'NERDTree ./'
-          let g:windowWidth = winwidth(winnr())
-          let g:nerdtreebuf = bufnr('')
-          let g:nerdstatus = 1 
-      elseif g:nerdstatus == 1 
-          execute 'wincmd t'
-          execute 'vertical resize' 0 
-          execute 'wincmd p'
-          let g:nerdstatus = 2 
-      elseif g:nerdstatus == 2 
-          execute 'wincmd t'
-          execute 'vertical resize' g:windowWidth
-          let g:nerdstatus = 1 
-      endif
-  endfunction
-  noremap <c-e> :<c-u>:call ExecuteNERDTree()<cr>
-
-NeoBundle 'glsl.vim'
-  autocmd BufNewFile,BufRead *.frag,*.vert,*.fp,*.vp,*.glsl
-    \ set filetype=glsl
-
-NeoBundle 'mattn/webapi-vim'
-NeoBundle 'tell-k/vim-browsereload-mac'
-NeoBundle 'jeyb/vim-jst'
-NeoBundle 'kchmck/vim-coffee-script'
-NeoBundle 'slim-template/vim-slim'
-NeoBundle 'tpope/vim-rails'
-NeoBundle 'sophacles/vim-processing'
-NeoBundle 'vim-scripts/sudo.vim'
-NeoBundle 'digitaltoad/vim-jade'
-
-NeoBundle 'osyo-manga/vim-over'
-"" vim-over {{{
-" vim-overの起動
-nnoremap <silent> <Leader>m :OverCommandLine<CR>
-" カーソル下の単語をハイライト付きで置換
-nnoremap sub :OverCommandLine<CR>%s/<C-r><C-w>//g<Left><Left>
-" コピーした文字列をハイライト付きで置換
- nnoremap subp y:OverCommandLine<CR>%s!<C-r>=substitute(@0, '!', '\\!', 'g')<CR>!!gI<Left><Left><Left>
-" }}}
-
-NeoBundle 'fuenor/qfixhowm.git'
-" {{{
-"QFixHowmキーマップ
-let QFixHowm_Key = 'g'
-
-""howm_dirはファイルを保存したいディレクトリを設定。
-let howm_dir             = '~/ownCloud/workspace/memo'
-let howm_filename        = '%Y/%m/%Y-%m-%d-%H%M%S.md'
-let howm_fileencoding    = 'utf-8'
-let howm_fileformat      = 'unix'
-" ファイルタイプをmarkdownにする
-let QFixHowm_FileType = 'markdown'
-" タイトル記号
-let QFixHowm_Title = '#'
-" タイトル行検索正規表現の辞書を初期化
-let QFixMRU_Title = {}
-" MRUでタイトル行とみなす正規表現(Vimの正規表現で指定)
-let QFixMRU_Title['mkd'] = '^###[^#]'
-" grepでタイトル行とみなす正規表現(使用するgrepによっては変更する必要があります)
-let QFixMRU_Title['mkd_regxp'] = '^###[^#]'
-
-let QFixHowm_DiaryFile = 'diary/%Y/%m/%Y-%m-%d-000000.md'
-" }}}
-
-
-NeoBundle 'kana/vim-submode'
-
-" Indent
-NeoBundle 'Yggdroot/indentLine'
-let g:indentLine_faster = 1
-nmap <silent><Leader>i :<C-u>IndentLinesToggle<CR>
-
-" Text align
-NeoBundle 'junegunn/vim-easy-align'
-
-NeoBundle 'mhinz/vim-startify'
-
-" markdown
-NeoBundle 'godlygeek/tabular'
-NeoBundle 'plasticboy/vim-markdown'
-
-" grunt
-NeoBundle 'mklabs/grunt.vim'
-
-" less
-NeoBundle 'groenewege/vim-less'
-
-" コメントアウト系プラグイン
-NeoBundle 'tomtom/tcomment_vim'
-" tcommentで使用する形式を追加
-if !exists('g:tcomment_types')
-  let g:tcomment_types = {}
-endif
-let g:tcomment_types = {
-      \'php_surround' : "<?php %s ?>",
-      \'eruby_surround' : "<%% %s %%>",
-      \'eruby_surround_minus' : "<%% %s -%%>",
-      \'eruby_surround_equality' : "<%%= %s %%>",
-\}
-" マッピングを追加
-function! SetErubyMapping2()
-  nmap <buffer> <C-_>c :TCommentAs eruby_surround<CR>
-  nmap <buffer> <C-_>- :TCommentAs eruby_surround_minus<CR>
-  nmap <buffer> <C-_>= :TCommentAs eruby_surround_equality<CR>
-
-  vmap <buffer> <C-_>c :TCommentAs eruby_surround<CR>
-  vmap <buffer> <C-_>- :TCommentAs eruby_surround_minus<CR>
-  vmap <buffer> <C-_>= :TCommentAs eruby_surround_equality<CR>
-endfunction
-" erubyのときだけ設定を追加
-au FileType eruby call SetErubyMapping2()
-" phpのときだけ設定を追加
-au FileType php nmap <buffer><C-_>c :TCommentAs php_surround<CR>
-au FileType php vmap <buffer><C-_>c :TCommentAs php_surround<CR>
-" caw.vim.git
-" NeoBundle "tyru/caw.vim.git"
-" nmap <C-K> <Plug>(caw:i:toggle)
-" vmap <C-K> <Plug>(caw:i:toggle)
-
-endif
-NeoBundleCheck
-" }}}
-
-" Setting {{{
-filetype plugin indent on
 syntax enable
-
 "Encode
  set ffs=unix,dos,mac
  set encoding=utf-8
@@ -459,152 +28,520 @@ syntax enable
  if exists('&ambiwidth')
  set ambiwidth=double
  endif
-
  "File
  set hidden
  set autoread
- "Search
- set incsearch
- set ignorecase
- set smartcase
- set wrapscan
- set nohlsearch
- "Input
- set cindent
- set shiftwidth=4
- set tabstop=2
- set expandtab
- set softtabstop=4
- set backspace=indent,eol,start
- set whichwrap=b,s,h,l,<,>,[,]
- set clipboard=unnamed
- vnoremap <silent> > >gv
- vnoremap <silent> < <gv
- "Display
- set number
- set title
- set showcmd
- set ruler
- set list
- set showmatch
- set matchtime=3
-"  au BufRead,BufNewFile *.scss set filetype=sass
- au BufRead,BufNewFile *.slim set filetype=slim
- au BufNewFile,BufRead *.ejs.* set filetype=jst
- au BufNewFile,BufRead *.ejs set filetype=jst
+ " 検索関係
+  set wrapscan
+  set ignorecase          " 大文字小文字を区別しない
+  set smartcase           " 検索文字に大文字がある場合は大文字小文字を区別
+  set incsearch           " インクリメンタルサーチ
+  set hlsearch            " 検索マッチテキストをハイライト
+  " バックスラッシュやクエスチョンを状況に合わせ自動的にエスケープ
+  cnoremap <expr> / getcmdtype() == '/' ? '\/' : '/'
+  cnoremap <expr> ? getcmdtype() == '?' ? '\?' : '?'
+
+ " 編集関係
+  set shiftround          " '<'や'>'でインデントする際に'shiftwidth'の倍数に丸める
+  set infercase           " 補完時に大文字小文字を区別しない
+  set virtualedit=all     " カーソルを文字が存在しない部分でも動けるようにする
+  set hidden              " バッファを閉じる代わりに隠す（Undo履歴を残すため）
+  set switchbuf=useopen   " 新しく開く代わりにすでに開いてあるバッファを開く
+  set showmatch           " 対応する括弧などをハイライト表示する
+  set matchtime=3         " 対応括弧のハイライト表示を3秒にする
+  " 対応括弧に'<'と'>'のペアを追加
+  set matchpairs& matchpairs+=<:>
+  " バックスペースでなんでも消せるようにする
+  set backspace=indent,eol,start
+  " クリップボードをデフォルトのレジスタとして指定。後にYankRingを使うので
+  " 'unnamedplus'が存在しているかどうかで設定を分ける必要がある
+  if has('unnamedplus')
+      set clipboard& clipboard+=unnamedplus,unnamed 
+  else
+      set clipboard& clipboard+=unnamed
+  endif
+  " Swapファイル？Backupファイル？前時代的すぎ
+  " なので全て無効化する
+  set nowritebackup
+  set nobackup
+  set noswapfile 
+  "
+  set cindent
+  set shiftwidth=4
+  set tabstop=2
+  set expandtab
+  set softtabstop=4
+  set whichwrap=b,s,h,l,<,>,[,]
+  vnoremap <silent> > >gv
+  vnoremap <silent> < <gv
+
+  "表示関係
+  set laststatus=2        " ステータスライン2行
+  set cursorline          " カーソルを表示
+  highlight CursorLine cterm=underline ctermfg=NONE ctermbg=NONE
+  highlight CursorLine gui=underline guifg=NONE guibg=NONE
+  set list                " 不可視文字の可視化
+  set number              " 行番号の表示
+  set wrap                " 長いテキストの折り返し
+  set textwidth=0         " 自動的に改行が入るのを無効化
+  set colorcolumn=80      " その代わり80文字目にラインを入れる
+  " 前時代的スクリーンベルを無効化
+  set t_vb=
+  set novisualbell
+  " デフォルト不可視文字は美しくないのでUnicodeで綺麗に
+  set listchars=tab:»-,trail:-,extends:»,precedes:«,nbsp:%,eol:↲
+  "
+  set title
+  set showcmd
+  set ruler
+  set showmatch
+  set matchtime=3
+  au BufRead,BufNewFile *.scss set filetype=sass
+  au BufRead,BufNewFile *.slim set filetype=slim
+  au BufNewFile,BufRead *.ejs.* set filetype=jst
+  au BufNewFile,BufRead *.ejs set filetype=jst
  "補完
  set wildmenu
  set wildchar=<tab>
  set history=1000
  set wildmode=list:longest,full
- set statusline=%F%r%h%=
- set autoindent
  set smartindent
  set shiftwidth=2
- set listchars=tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%
- set visualbell
- set vb t_vb=
- set clipboard+=unnamed
 
-"  "ステータスラインの設定 分けて書いた方が見易いと思う
- set laststatus=2
-"  set statusline=%n\:%y
-"  set statusline+=[%{(&fenc!=''?&fenc:&enc)}]
-"  set statusline+=[%{Getff()}]
-"  set statusline+=%m%r\ %F%=[%l/%L]
-"  function! Getff()
-"      if &ff == 'unix'
-"          return 'LF'
-"      elseif &ff == 'dos'
-"          return 'CR+LF'
-"      elseif &ff == 'mac'
-"          return 'CR'
-"      else
-"          return '?'
-"      endif
-"   endfunction
-
- "swapファイル
- set directory=/tmp
-
-" tab
-" Anywhere SID.
-function! s:SID_PREFIX()
-  return matchstr(expand('<sfile>'), '<SNR>\d\+_\zeSID_PREFIX$')
-endfunction
-" Set tabline.
-function! s:my_tabline()  "{{{
-  let s = ''
-  for i in range(1, tabpagenr('$'))
-    let bufnrs = tabpagebuflist(i)
-    let bufnr = bufnrs[tabpagewinnr(i) - 1]  " first window, first appears
-    let no = i  " display 0-origin tabpagenr.
-    let mod = getbufvar(bufnr, '&modified') ? '!' : ' '
-    let title = fnamemodify(bufname(bufnr), ':t')
-    let title = '[' . title . ']'
-    let s .= '%'.i.'T'
-    let s .= '%#' . (i == tabpagenr() ? 'TabLineSel' : 'TabLine') . '#'
-    let s .= no . ':' . title
-    let s .= mod
-    let s .= '%#TabLineFill# '
+  "マクロおよびキー設定
+  " 入力モード中に素早くjjと入力した場合はESCとみなす
+  inoremap jj <Esc>
+  " ESCを二回押すことでハイライトを消す
+  nmap <silent> <Esc><Esc> :nohlsearch<CR>
+  " カーソル下の単語を * で検索
+  vnoremap <silent> * "vy/\V<C-r>=substitute(escape(@v, '\/'), "\n", '\\n', 'g')<CR><CR>
+  " 検索後にジャンプした際に検索単語を画面中央に持ってくる
+  nnoremap n nzz
+  nnoremap N Nzz
+  nnoremap * *zz
+  nnoremap # #zz
+  nnoremap g* g*zz
+  nnoremap g# g#zz
+  " j, k による移動を折り返されたテキストでも自然に振る舞うように変更
+  nnoremap j gj
+  nnoremap k gk
+  " vを二回で行末まで選択
+  vnoremap v $h
+  " TABにて対応ペアにジャンプ
+  nnoremap <Tab> %
+  vnoremap <Tab> %
+  " Ctrl + hjkl でウィンドウ間を移動
+  nnoremap <C-h> <C-w>h
+  nnoremap <C-j> <C-w>j
+  nnoremap <C-k> <C-w>k
+  nnoremap <C-l> <C-w>l
+  " Shift + 矢印でウィンドウサイズを変更
+  nnoremap <S-Left>  <C-w><<CR>
+  nnoremap <S-Right> <C-w>><CR>
+  nnoremap <S-Up>    <C-w>-<CR>
+  nnoremap <S-Down>  <C-w>+<CR>
+  " T + ? で各種設定をトグル
+  nnoremap [toggle] <Nop>
+  nmap T [toggle]
+  nnoremap <silent> [toggle]s :setl spell!<CR>:setl spell?<CR>
+  nnoremap <silent> [toggle]l :setl list!<CR>:setl list?<CR>
+  nnoremap <silent> [toggle]t :setl expandtab!<CR>:setl expandtab?<CR>
+  nnoremap <silent> [toggle]w :setl wrap!<CR>:setl wrap?<CR>
+  " make, grep などのコマンド後に自動的にQuickFixを開く
+  autocmd MyAutoCmd QuickfixCmdPost make,grep,grepadd,vimgrep copen
+  " QuickFixおよびHelpでは q でバッファを閉じる
+  autocmd MyAutoCmd FileType help,qf nnoremap <buffer> q <C-w>c
+  " w!! でスーパーユーザーとして保存（sudoが使える環境限定）
+  cmap w!! w !sudo tee > /dev/null %
+  " :e などでファイルを開く際にフォルダが存在しない場合は自動作成
+  function! s:mkdir(dir, force)
+    if !isdirectory(a:dir) && (a:force ||
+          \ input(printf('"%s" does not exist. Create? [y/N]', a:dir)) =~? '^y\%[es]$')
+      call mkdir(iconv(a:dir, &encoding, &termencoding), 'p')
+    endif
+  endfunction
+  autocmd MyAutoCmd BufWritePre * call s:mkdir(expand('<afile>:p:h'), v:cmdbang)
+  " vim 起動時のみカレントディレクトリを開いたファイルの親ディレクトリに指定
+  autocmd MyAutoCmd VimEnter * call s:ChangeCurrentDir('', '')
+  function! s:ChangeCurrentDir(directory, bang)
+      if a:directory == ''
+          lcd %:p:h
+      else
+          execute 'lcd' . a:directory
+      endif
+      if a:bang == ''
+          pwd
+      endif
+  endfunction
+  " ~/.vimrc.localが存在する場合のみ設定を読み込む
+  let s:local_vimrc = expand('~/.vimrc.local')
+  if filereadable(s:local_vimrc)
+      execute 'source ' . s:local_vimrc
+  endif
+  " tab
+  " Anywhere SID.
+  function! s:SID_PREFIX()
+    return matchstr(expand('<sfile>'), '<SNR>\d\+_\zeSID_PREFIX$')
+  endfunction
+  " Set tabline.
+  function! s:my_tabline()  "{{{
+    let s = ''
+    for i in range(1, tabpagenr('$'))
+      let bufnrs = tabpagebuflist(i)
+      let bufnr = bufnrs[tabpagewinnr(i) - 1]  " first window, first appears
+      let no = i  " display 0-origin tabpagenr.
+      let mod = getbufvar(bufnr, '&modified') ? '!' : ' '
+      let title = fnamemodify(bufname(bufnr), ':t')
+      let title = '[' . title . ']'
+      let s .= '%'.i.'T'
+      let s .= '%#' . (i == tabpagenr() ? 'TabLineSel' : 'TabLine') . '#'
+      let s .= no . ':' . title
+      let s .= mod
+      let s .= '%#TabLineFill# '
+    endfor
+    let s .= '%#TabLineFill#%T%=%#TabLine#'
+    return s
+  endfunction
+  let &tabline = '%!'. s:SID_PREFIX() . 'my_tabline()'
+  " set showtabline=2 " 常にタブラインを表示
+  " The prefix key.
+  nnoremap    [Tag]   <Nop>
+  nmap    t [Tag]
+  " Tab jump
+  for n in range(1, 9)
+    execute 'nnoremap <silent> [Tag]'.n  ':<C-u>tabnext'.n.'<CR>'
   endfor
-  let s .= '%#TabLineFill#%T%=%#TabLine#'
-  return s
-endfunction
-let &tabline = '%!'. s:SID_PREFIX() . 'my_tabline()'
-set showtabline=2 " 常にタブラインを表示
-" The prefix key.
-nnoremap    [Tag]   <Nop>
-nmap    t [Tag]
-" Tab jump
-for n in range(1, 9)
-  execute 'nnoremap <silent> [Tag]'.n  ':<C-u>tabnext'.n.'<CR>'
-endfor
-" t1 で1番左のタブ、t2 で1番左から2番目のタブにジャンプ
-map <silent> [Tag]c :tablast <bar> tabnew<CR>
-" tc 新しいタブを一番右に作る
-map <silent> [Tag]x :tabclose<CR>
-" tx タブを閉じる
-map <silent> [Tag]n :tabnext<CR>
-" tn 次のタブ
-map <silent> [Tag]p :tabprevious<CR>
-" tp 前のタブ
-" }}}
+  " t1 で1番左のタブ、t2 で1番左から2番目のタブにジャンプ
+  map <silent> [Tag]c :tablast <bar> tabnew<CR>
+  " tc 新しいタブを一番右に作る
+  map <silent> [Tag]x :tabclose<CR>
+  " tx タブを閉じる
+  map <silent> [Tag]n :tabnext<CR>
+  " tn 次のタブ
+  map <silent> [Tag]p :tabprevious<CR>
+  " tp 前のタブ
+  " }}}
 
-" vim-submode
-nnoremap s <Nop>
-nnoremap sj <C-w>j
-nnoremap sk <C-w>k
-nnoremap sl <C-w>l
-nnoremap sh <C-w>h
-nnoremap sJ <C-w>J
-nnoremap sK <C-w>K
-nnoremap sL <C-w>L
-nnoremap sH <C-w>H
-nnoremap sn gt
-nnoremap sp gT
-nnoremap sr <C-w>r
-nnoremap s= <C-w>=
-nnoremap sw <C-w>w
-nnoremap so <C-w>_<C-w>|
-nnoremap sO <C-w>=
-nnoremap sN :<C-u>bn<CR>
-nnoremap sP :<C-u>bp<CR>
-nnoremap st :<C-u>tabnew<CR>
-nnoremap sT :<C-u>Unite tab<CR>
-nnoremap ss :<C-u>sp<CR>
-nnoremap sv :<C-u>vs<CR>
-nnoremap sq :<C-u>q<CR>
-nnoremap sQ :<C-u>bd<CR>
-nnoremap sb :<C-u>Unite buffer_tab -buffer-name=file<CR>
-nnoremap sB :<C-u>Unite buffer -buffer-name=file<CR>
+" Neobundle
+let s:noplugin = 0
+let s:bundle_root = expand('~/.vim/bundle')
+let s:neobundle_root = s:bundle_root . '/neobundle.vim'
+if !isdirectory(s:neobundle_root) || v:version < 702
+    " NeoBundleが存在しない、もしくはVimのバージョンが古い場合はプラグインを一切
+    " 読み込まない
+    let s:noplugin = 1
+else
+    " NeoBundleを'runtimepath'に追加し初期化を行う
+    if has('vim_starting')
+        execute "set runtimepath+=" . s:neobundle_root
+    endif
+    call neobundle#rc(s:bundle_root)
 
-call submode#enter_with('bufmove', 'n', '', 's>', '<C-w>>')
-call submode#enter_with('bufmove', 'n', '', 's<', '<C-w><')
-call submode#enter_with('bufmove', 'n', '', 's+', '<C-w>+')
-call submode#enter_with('bufmove', 'n', '', 's-', '<C-w>-')
-call submode#map('bufmove', 'n', '', '>', '<C-w>>')
-call submode#map('bufmove', 'n', '', '<', '<C-w><')
-call submode#map('bufmove', 'n', '', '+', '<C-w>+')
-call submode#map('bufmove', 'n', '', '-', '<C-w>-')
+    " NeoBundle自身をNeoBundleで管理させる
+    NeoBundleFetch 'Shougo/neobundle.vim'
 
+    " 非同期通信を可能にする
+    " 'build'が指定されているのでインストール時に自動的に
+    " 指定されたコマンドが実行され vimproc がコンパイルされる
+    NeoBundle "Shougo/vimproc", {
+        \ "build": {
+        \   "windows"   : "make -f make_mingw32.mak",
+        \   "cygwin"    : "make -f make_cygwin.mak",
+        \   "mac"       : "make -f make_mac.mak",
+        \   "unix"      : "make -f make_unix.mak",
+        \ }}
+
+    " (ry
+      " LightLine
+      NeoBundle 'itchyny/lightline.vim'
+      let g:lightline = {
+            \ 'colorscheme': 'solarized',
+            \ 'active': {
+            \   'left': [ [ 'mode', 'paste' ], [ 'fugitive', 'filename' ], ['ctrlpmark'] ],
+            \   'right': [ [ 'syntastic', 'lineinfo' ], ['percent'], [ 'fileformat', 'fileencoding', 'filetype' ] ]
+            \ },
+            \ 'component_function': {
+            \   'fugitive': 'MyFugitive',
+            \   'filename': 'MyFilename',
+            \   'fileformat': 'MyFileformat',
+            \   'filetype': 'MyFiletype',
+            \   'fileencoding': 'MyFileencoding',
+            \   'mode': 'MyMode',
+            \   'ctrlpmark': 'CtrlPMark',
+            \ },
+            \ 'component_expand': {
+            \   'syntastic': 'SyntasticStatuslineFlag',
+            \ },
+            \ 'component_type': {
+            \   'syntastic': 'error',
+            \ },
+            \ 'separator': { 'left': '⮀', 'right': '⮂' },
+            \ 'subseparator': { 'left': '⮁', 'right': '⮃' }
+            \ }
+      function! MyModified()
+        return &ft =~ 'help' ? '' : &modified ? '+' : &modifiable ? '' : '-'
+      endfunction
+      function! MyReadonly()
+        return &ft !~? 'help' && &readonly ? 'RO' : ''
+      endfunction
+      function! MyFilename()
+        let fname = expand('%:t')
+        return fname == 'ControlP' ? g:lightline.ctrlp_item :
+              \ fname == '__Tagbar__' ? g:lightline.fname :
+              \ fname =~ '__Gundo\|NERD_tree' ? '' :
+              \ &ft == 'vimfiler' ? vimfiler#get_status_string() :
+              \ &ft == 'unite' ? unite#get_status_string() :
+              \ &ft == 'vimshell' ? vimshell#get_status_string() :
+              \ ('' != MyReadonly() ? MyReadonly() . ' ' : '') .
+              \ ('' != fname ? fname : '[No Name]') .
+              \ ('' != MyModified() ? ' ' . MyModified() : '')
+      endfunction
+      function! MyFugitive()
+        try
+          if expand('%:t') !~? 'Tagbar\|Gundo\|NERD' && &ft !~? 'vimfiler' && exists('*fugitive#head')
+            let mark = ''  " edit here for cool mark
+            let _ = fugitive#head()
+            return strlen(_) ? mark._ : ''
+          endif
+        catch
+        endtry
+        return ''
+      endfunction
+      function! MyFileformat()
+        return winwidth(0) > 70 ? &fileformat : ''
+      endfunction
+      function! MyFiletype()
+        return winwidth(0) > 70 ? (strlen(&filetype) ? &filetype : 'no ft') : ''
+      endfunction
+      function! MyFileencoding()
+        return winwidth(0) > 70 ? (strlen(&fenc) ? &fenc : &enc) : ''
+      endfunction
+      function! MyMode()
+        let fname = expand('%:t')
+        return fname == '__Tagbar__' ? 'Tagbar' :
+              \ fname == 'ControlP' ? 'CtrlP' :
+              \ fname == '__Gundo__' ? 'Gundo' :
+              \ fname == '__Gundo_Preview__' ? 'Gundo Preview' :
+              \ fname =~ 'NERD_tree' ? 'NERDTree' :
+              \ &ft == 'unite' ? 'Unite' :
+              \ &ft == 'vimfiler' ? 'VimFiler' :
+              \ &ft == 'vimshell' ? 'VimShell' :
+              \ winwidth(0) > 60 ? lightline#mode() : ''
+      endfunction
+      function! CtrlPMark()
+        if expand('%:t') =~ 'ControlP'
+          call lightline#link('iR'[g:lightline.ctrlp_regex])
+          return lightline#concatenate([g:lightline.ctrlp_prev, g:lightline.ctrlp_item
+                \ , g:lightline.ctrlp_next], 0)
+        else
+          return ''
+        endif
+      endfunction
+      let g:ctrlp_status_func = {
+        \ 'main': 'CtrlPStatusFunc_1',
+        \ 'prog': 'CtrlPStatusFunc_2',
+        \ }
+      function! CtrlPStatusFunc_1(focus, byfname, regex, prev, item, next, marked)
+        let g:lightline.ctrlp_regex = a:regex
+        let g:lightline.ctrlp_prev = a:prev
+        let g:lightline.ctrlp_item = a:item
+        let g:lightline.ctrlp_next = a:next
+        return lightline#statusline(0)
+      endfunction
+      function! CtrlPStatusFunc_2(str)
+        return lightline#statusline(0)
+      endfunction
+      let g:tagbar_status_func = 'TagbarStatusFunc'
+      function! TagbarStatusFunc(current, sort, fname, ...) abort
+          let g:lightline.fname = a:fname
+        return lightline#statusline(0)
+      endfunction
+      augroup AutoSyntastic
+        autocmd!
+        autocmd BufWritePost *.c,*.cpp call s:syntastic()
+      augroup END
+      function! s:syntastic()
+        SyntasticCheck
+        call lightline#update()
+      endfunction
+      let g:unite_force_overwrite_statusline = 0
+      let g:vimfiler_force_overwrite_statusline = 0
+      let g:vimshell_force_overwrite_statusline = 0
+
+      NeoBundle 'Yggdroot/indentLine'
+      
+      let g:indentLine_faster = 1
+      nmap <silent><Leader>i :<C-u>IndentLinesToggle<CR>
+      " Text align
+      NeoBundleLazy 'junegunn/vim-easy-align', { 'autoload': {
+            \ 'commands' : ['EasyAlign'] }}
+
+      " コメントアウト系プラグイン
+      NeoBundle 'tomtom/tcomment_vim'
+      " tcommentで使用する形式を追加
+      if !exists('g:tcomment_types')
+        let g:tcomment_types = {}
+      endif
+      let g:tcomment_types = {
+            \'php_surround' : "<?php %s ?>",
+            \'eruby_surround' : "<%% %s %%>",
+            \'eruby_surround_minus' : "<%% %s -%%>",
+            \'eruby_surround_equality' : "<%%= %s %%>",
+      \}
+      " マッピングを追加
+      function! SetErubyMapping2()
+        nmap <buffer> <C-_>c :TCommentAs eruby_surround<CR>
+        nmap <buffer> <C-_>- :TCommentAs eruby_surround_minus<CR>
+        nmap <buffer> <C-_>= :TCommentAs eruby_surround_equality<CR>
+        vmap <buffer> <C-_>c :TCommentAs eruby_surround<CR>
+        vmap <buffer> <C-_>- :TCommentAs eruby_surround_minus<CR>
+        vmap <buffer> <C-_>= :TCommentAs eruby_surround_equality<CR>
+      endfunction
+      " erubyのときだけ設定を追加
+      au FileType eruby call SetErubyMapping2()
+      " phpのときだけ設定を追加
+      au FileType php nmap <buffer><C-_>c :TCommentAs php_surround<CR>
+      au FileType php vmap <buffer><C-_>c :TCommentAs php_surround<CR>
+      " caw.vim.git
+      " NeoBundle "tyru/caw.vim.git"
+      " nmap <C-K> <Plug>(caw:i:toggle)
+      " vmap <C-K> <Plug>(caw:i:toggle)
+      
+      NeoBundle 'scrooloose/syntastic'
+
+    if has('lua') && v:version >= 703 && has('patch885')
+        NeoBundleLazy "Shougo/neocomplete.vim", {
+            \ "autoload": {
+            \   "insert": 1,
+            \ }}
+        let g:neocomplete#enable_at_startup = 1
+        let s:hooks = neobundle#get_hooks("neocomplete.vim")
+        function! s:hooks.on_source(bundle)
+            let g:acp_enableAtStartup = 0
+            let g:neocomplet#enable_smart_case = 1
+
+            " NeoCompleteを有効化
+            NeoCompleteEnable
+        endfunction
+    else
+        NeoBundleLazy "Shougo/neocomplcache.vim", {
+            \ "autoload": {
+            \   "insert": 1,
+            \ }}
+        let g:neocomplcache_enable_at_startup = 1
+        let s:hooks = neobundle#get_hooks("neocomplcache.vim")
+        function! s:hooks.on_source(bundle)
+            let g:acp_enableAtStartup = 0
+            let g:neocomplcache_enable_smart_case = 1
+            " NeoComplCacheを有効化
+            " NeoComplCacheEnable 
+        endfunction
+    endif
+    inoremap <expr><TAB> pumvisible() ? "\<C-n>" : "\<TAB>"
+    inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<S-TAB>"
+
+      NeoBundleLazy 'Shougo/neosnippet.vim', {
+          \ "autoload": {"insert": 1}}
+      " 'GundoToggle'が呼ばれるまでロードしない
+      NeoBundleLazy "sjl/gundo.vim", {
+      \ "autoload": {
+      \   "commands": ['GundoToggle'],
+      \}}
+      nnoremap <Leader>g :GundoToggle<CR>
+
+      " '<Plug>TaskList'というマッピングが呼ばれるまでロードしない
+      NeoBundleLazy "vim-scripts/TaskList.vim", {
+      \ "autoload": {
+      \   "mappings": ['<Plug>TaskList'],
+      \}}
+      nmap <Leader>T <plug>TaskList
+
+      " HTMLが開かれるまでロードしない
+      NeoBundleLazy 'mattn/emmet-vim', {
+          \ "autoload": {"filetypes": ['html', 'php']}}
+
+      NeoBundleLazy 'hail2u/vim-css3-syntax', {
+            \ "autoload": {"filetypes": ['css']}}
+
+      NeoBundleLazy 'taichouchou2/html5.vim', {
+            \ "autoload": {"filetypes": ['html', 'php']}}
+
+      NeoBundleLazy 'taichouchou2/vim-javascript', {
+            \ "autoload": {"filetypes": ['js']}}
+
+      NeoBundle 'cakebaker/scss-syntax.vim'
+
+    NeoBundleLazy "Shougo/unite.vim", {
+          \ "autoload": {
+          \   "commands": ["Unite", "UniteWithBufferDir"]
+          \ }}
+    NeoBundleLazy 'h1mesuke/unite-outline', {
+          \ "autoload": {
+          \   "unite_sources": ["outline"],
+          \ }}
+    nnoremap [unite] <Nop>
+    nmap U [unite]
+    nnoremap <silent> [unite]f :<C-u>UniteWithBufferDir -buffer-name=files file<CR>
+    nnoremap <silent> [unite]b :<C-u>Unite buffer<CR>
+    nnoremap <silent> [unite]r :<C-u>Unite register<CR>
+    nnoremap <silent> [unite]m :<C-u>Unite file_mru<CR>
+    nnoremap <silent> [unite]c :<C-u>Unite bookmark<CR>
+    nnoremap <silent> [unite]o :<C-u>Unite outline<CR>
+    nnoremap <silent> [unite]t :<C-u>Unite tab<CR>
+    nnoremap <silent> [unite]w :<C-u>Unite window<CR>
+    let s:hooks = neobundle#get_hooks("unite.vim")
+    function! s:hooks.on_source(bundle)
+      " start unite in insert mode
+      let g:unite_enable_start_insert = 1
+      " use vimfiler to open directory
+      call unite#custom_default_action("source/bookmark/directory", "vimfiler")
+      call unite#custom_default_action("directory", "vimfiler")
+      call unite#custom_default_action("directory_mru", "vimfiler")
+      autocmd MyAutoCmd FileType unite call s:unite_settings()
+      function! s:unite_settings()
+        imap <buffer> <Esc><Esc> <Plug>(unite_exit)
+        nmap <buffer> <Esc> <Plug>(unite_exit)
+        nmap <buffer> <C-n> <Plug>(unite_select_next_line)
+        nmap <buffer> <C-p> <Plug>(unite_select_previous_line)
+      endfunction
+    endfunction
+
+  NeoBundleLazy "Shougo/vimfiler", {
+        \ "depends": ["Shougo/unite.vim"],
+        \ "autoload": {
+        \   "commands": ["VimFilerTab", "VimFiler", "VimFilerExplorer"],
+        \   "mappings": ['<Plug>(vimfiler_switch)'],
+        \   "explorer": 1,
+        \ }}
+  nnoremap <Leader>e :VimFilerExplorer<CR>
+  " close vimfiler automatically when there are only vimfiler open
+  autocmd MyAutoCmd BufEnter * if (winnr('$') == 1 && &filetype ==# 'vimfiler') | q | endif
+  let s:hooks = neobundle#get_hooks("vimfiler")
+  let g:vimfiler_edit_action = 'tabopen'
+  function! s:hooks.on_source(bundle)
+    let g:vimfiler_as_default_explorer = 1
+    let g:vimfiler_enable_auto_cd = 1
+    " .から始まるファイルおよび.pycで終わるファイルを不可視パターンに
+    let g:vimfiler_ignore_pattern = "\%(^\..*\|\.pyc$\)"
+    " vimfiler specific key mappings
+    autocmd MyAutoCmd FileType vimfiler call s:vimfiler_settings()
+    function! s:vimfiler_settings()
+      " ^^ to go up
+      nmap <buffer> ^^ <Plug>(vimfiler_switch_to_parent_directory)
+      " use R to refresh
+      nmap <buffer> R <Plug>(vimfiler_redraw_screen)
+      " overwrite C-l
+      nmap <buffer> <C-l> <C-w>l
+    endfunction
+  endfunction
+
+  NeoBundle 'tpope/vim-surround'
+  NeoBundle 'vim-scripts/Align'
+  NeoBundle 'vim-scripts/YankRing.vim'
+
+
+
+    " インストールされていないプラグインのチェックおよびダウンロード
+    NeoBundleCheck
+endif
+filetype plugin indent on
