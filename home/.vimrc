@@ -223,33 +223,43 @@ syntax enable
   " }}}
 
 " Neobundle
-let s:noplugin = 0
-let s:bundle_root = expand('~/.vim/bundle')
-let s:neobundle_root = s:bundle_root . '/neobundle.vim'
-if !isdirectory(s:neobundle_root) || v:version < 702
-    " NeoBundleが存在しない、もしくはVimのバージョンが古い場合はプラグインを一切
-    " 読み込まない
-    let s:noplugin = 1
-else
-    " NeoBundleを'runtimepath'に追加し初期化を行う
-    if has('vim_starting')
-        execute "set runtimepath+=" . s:neobundle_root
-    endif
-    call neobundle#rc(s:bundle_root)
+ " Note: Skip initialization for vim-tiny or vim-small.
+ if !1 | finish | endif
 
-    " NeoBundle自身をNeoBundleで管理させる
-    NeoBundleFetch 'Shougo/neobundle.vim'
+ if has('vim_starting')
+   if &compatible
+     set nocompatible               " Be iMproved
+   endif
 
-    " 非同期通信を可能にする
-    " 'build'が指定されているのでインストール時に自動的に
-    " 指定されたコマンドが実行され vimproc がコンパイルされる
-    NeoBundle "Shougo/vimproc", {
-        \ "build": {
-        \   "windows"   : "make -f make_mingw32.mak",
-        \   "cygwin"    : "make -f make_cygwin.mak",
-        \   "mac"       : "make -f make_mac.mak",
-        \   "unix"      : "make -f make_unix.mak",
-        \ }}
+   " Required:
+   set runtimepath+=~/.vim/bundle/neobundle.vim/
+ endif
+
+ " Required:
+ call neobundle#begin(expand('~/.vim/bundle/'))
+
+ " Let NeoBundle manage NeoBundle
+ " Required:
+ NeoBundleFetch 'Shougo/neobundle.vim'
+
+  NeoBundle 'Shougo/vimproc.vim', {
+  \ 'build' : {
+  \     'windows' : 'tools\\update-dll-mingw',
+  \     'cygwin' : 'make -f make_cygwin.mak',
+  \     'mac' : 'make -f make_mac.mak',
+  \     'linux' : 'make',
+  \     'unix' : 'gmake',
+  \    },
+  \ }
+
+ " My Bundles here:
+ " Refer to |:NeoBundle-examples|.
+ " Note: You don't set neobundle setting in .gvimrc!
+
+ call neobundle#end()
+
+ " Required:
+ filetype plugin indent on
 
     " (ry
       " LightLine
@@ -540,8 +550,45 @@ else
   NeoBundle 'vim-scripts/YankRing.vim'
 
 
+  " python
+  " NeoBundle 'davidhalter/jedi-vim'
+  NeoBundleLazy "davidhalter/jedi-vim", {
+        \ "autoload": {
+        \   "filetypes": ["python", "python3", "djangohtml"],
+        \ },
+        \ "build": {
+        \   "mac": "pip install jedi",
+        \   "unix": "pip install jedi",
+        \ }}
+  let s:hooks = neobundle#get_hooks("jedi-vim")
+  function! s:hooks.on_source(bundle)
+    autocmd FileType python setlocal omnifunc=jedi#completions
+    let g:jedi#completions_enabled = 0
+    let g:jedi#auto_vim_configuration = 0
+    if !exists('g:neocomplete#force_omni_input_patterns')
+            let g:neocomplete#force_omni_input_patterns = {}
+    endif
+    let g:neocomplete#force_omni_input_patterns.python = '\h\w*\|[^. \t]\.\w*'
+    " quickrunと被るため大文字に変更
+    let g:jedi#rename_command = '<Leader>R'
+  endfunction
+
+  NeoBundleLazy "thinca/vim-quickrun", {
+        \ "autoload": {
+        \   "mappings": [['nxo', '<Plug>(quickrun)']]
+        \ }}
+  nmap <Leader>r <Plug>(quickrun)
+  let s:hooks = neobundle#get_hooks("vim-quickrun")
+  function! s:hooks.on_source(bundle)
+    let g:quickrun_config = {
+        \ "*": {"runner": "vimproc"},
+        \ }
+  endfunction
+
+  " vimのセッションを保存
+  NeoBundle "tpope/vim-obsession"
 
     " インストールされていないプラグインのチェックおよびダウンロード
     NeoBundleCheck
-endif
-filetype plugin indent on
+" endif
+" filetype plugin indent on
