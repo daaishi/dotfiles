@@ -220,6 +220,7 @@ syntax enable
   " tn 次のタブ
   map <silent> [Tag]p :tabprevious<CR>
   " tp 前のタブ
+  "
   " }}}
 
 " Neobundle
@@ -476,8 +477,7 @@ syntax enable
       NeoBundleLazy 'taichouchou2/html5.vim', {
             \ "autoload": {"filetypes": ['html', 'php']}}
 
-      NeoBundleLazy 'taichouchou2/vim-javascript', {
-            \ "autoload": {"filetypes": ['js']}}
+      NeoBundleLazy 'jelera/vim-javascript-syntax', {'autoload':{'filetypes':['javascript']}}
 
       NeoBundle 'cakebaker/scss-syntax.vim'
 
@@ -587,6 +587,20 @@ syntax enable
 
   " vimのセッションを保存
   NeoBundle "tpope/vim-obsession"
+
+ " solarized
+  " NeoBundle 'altercation/vim-colors-solarized'
+  " set background=dark
+  " let g:solarized_visibility = "high"
+  " let g:solarized_contrast = "high"
+  " colorscheme solarized
+  " hybrid
+  NeoBundle 'w0ng/vim-hybrid'
+  colorscheme hybrid
+
+  NeoBundle 'tyru/open-browser.vim'
+  NeoBundle 'kannokanno/previm'
+
 
     " インストールされていないプラグインのチェックおよびダウンロード
     NeoBundleCheck
