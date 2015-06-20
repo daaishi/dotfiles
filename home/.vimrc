@@ -515,6 +515,14 @@ let g:vimfiler_force_overwrite_statusline = 0
 let g:vimshell_force_overwrite_statusline = 0
 
 "----------------------------------------------------
+" previm
+"----------------------------------------------------
+augroup PrevimSettings
+  autocmd!
+  autocmd BufNewFile,BufRead *.{md,mdwn,mkd,mkdn,mark*} set filetype=markdown
+augroup END
+
+"----------------------------------------------------
 " indentLine
 "----------------------------------------------------
 let g:indentLine_faster = 1
