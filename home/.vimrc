@@ -48,6 +48,7 @@ NeoBundleLazy 'taichouchou2/html5.vim', { "autoload": { "filetypes": ['html', 'p
 NeoBundleLazy 'jelera/vim-javascript-syntax', { 'autoload':{ 'filetypes':['javascript'] } }
 NeoBundleLazy "Shougo/unite.vim", { "autoload": { "commands": ["Unite", "UniteWithBufferDir"] } }
 NeoBundleLazy 'h1mesuke/unite-outline', { "autoload": { "unite_sources": ["outline"], } }
+NeoBundleLazy 'sophacles/vim-processing', { "autoload": { "filetypes": ['pde', 'processing'] } }
 NeoBundleLazy "Shougo/vimfiler", {
 \ "depends": ["Shougo/unite.vim"],
 \ "autoload": {
@@ -90,7 +91,7 @@ set ffs=unix,dos,mac
 set encoding=utf-8
 set fileencodings=utf-8,ucs-bom,iso-2022-jp-3,iso-2022-jp,eucjp-ms,euc-jisx0213,euc-jp,sjis,cp932
 set termencoding=utf-8
-scriptencoding utf-8
+" scriptencoding utf-8
 set clipboard+=unnamed,autoselect
 set vb t_vb=    " ビープ音を鳴らさない
 
@@ -134,15 +135,16 @@ set matchpairs=(:),{:},[:],<:>  " 強調する括弧のパターン
 set wildmenu        " コマンドライン補完を拡張モードにする
 set cursorline      " カーソルを表示
 set virtualedit=all     " カーソルを文字が存在しない部分でも動けるようにする
-set list                " 不可視文字の可視化
 set wrap                " 長いテキストの折り返し
-set textwidth=0         " 自動的に改行が入るのを無効化
+" set textwidth=0         " 自動的に改行が入るのを無効化
 set colorcolumn=80      " その代わり80文字目にラインを入れる
 set novisualbell    " 前時代的スクリーンベルを無効化
 set ruler
-set listchars=tab:»-,trail:-,extends:»,precedes:«,nbsp:%,eol:↲  "デフォルト不可視文字は美しくないのでUnicodeで綺麗に
+set list                " 不可視文字の可視化
+set listchars=tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%
 highlight CursorLine cterm=underline ctermfg=NONE ctermbg=NONE
 highlight CursorLine gui=underline guifg=NONE guibg=NONE
+set ambiwidth=double
 
 "----------------------------------------------------
 " インデント
@@ -187,10 +189,11 @@ noremap \  ,
 "----------------------------------------------------
 " ファイル系
 "----------------------------------------------------
-au BufRead,BufNewFile *.scss set filetype=sass
-au BufRead,BufNewFile *.slim set filetype=slim
+au BufNewFile,BufRead *.scss set filetype=sass
+au BufNewFile,BufRead *.slim set filetype=slim
 au BufNewFile,BufRead *.ejs.* set filetype=jst
 au BufNewFile,BufRead *.ejs set filetype=jst
+au BufNewFile,BufRead *.pde setf processing↲
 
 "----------------------------------------------------
 " キーマッピング
@@ -209,10 +212,10 @@ nnoremap # #zz
 nnoremap g* g*zz
 nnoremap g# g#zz
 " j, k による移動を折り返されたテキストでも自然に振る舞うように変更
-nnoremap j gj
-nnoremap k gk
-nnoremap <Down> gj
-nnoremap <Up>> gk
+" nnoremap j gj
+" nnoremap k gk
+" nnoremap <Down> gj
+" nnoremap <Up> gk
 " vを二回で行末まで選択
 vnoremap v $h
 " TABにて対応ペアにジャンプ
