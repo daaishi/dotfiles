@@ -68,6 +68,7 @@ NeoBundleLazy "thinca/vim-quickrun", {
 \ "autoload": {
 \   "mappings": [['nxo', '<Plug>(quickrun)']]
 \ }}
+
 NeoBundleLazy 'OmniSharp/omnisharp-vim', {
 \   'autoload': { 'filetypes': [ 'cs', 'csi', 'csx' ] },
 \   'build': {
@@ -76,6 +77,7 @@ NeoBundleLazy 'OmniSharp/omnisharp-vim', {
 \     'unix': 'xbuild server/OmniSharp.sln',
 \   },
 \ }
+
 NeoBundleLazy 'OrangeT/vim-csharp', { 'autoload': { 'filetypes': [ 'cs', 'csi', 'csx' ] } }
 
 """" end of plugin list
@@ -659,4 +661,4 @@ endfunction
 "----------------------------------------------------
 " vim-hybrid
 "----------------------------------------------------
-colorscheme hybrid
+""colorscheme hybrid
