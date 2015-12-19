@@ -36,6 +36,7 @@ NeoBundle "tpope/vim-obsession"
 NeoBundle 'tyru/open-browser.vim'
 NeoBundle 'kannokanno/previm'
 NeoBundle "tyru/caw.vim.git"
+NeoBundle 'wakatime/vim-wakatime'
 
 NeoBundleLazy 'junegunn/vim-easy-align', { 'autoload': { 'commands' : ['EasyAlign'] } }
 NeoBundleLazy "Shougo/neocomplete.vim", { "autoload": { "insert": 1 } }
