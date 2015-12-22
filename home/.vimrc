@@ -1,10 +1,7 @@
-"----------------------------------------------------
-" Plugin & NeoBundle
-"----------------------------------------------------
 if has('vim_starting')
-  if &compatible
-    set nocompatible               " Be iMproved
-  endif
+  " if &compatible
+""    set nocompatible               " Be iMproved
+  " endif
   set runtimepath+=~/.vim/bundle/neobundle.vim/
 endif
 
@@ -37,6 +34,8 @@ NeoBundle 'tyru/open-browser.vim'
 NeoBundle 'kannokanno/previm'
 NeoBundle "tyru/caw.vim.git"
 NeoBundle 'wakatime/vim-wakatime'
+" NeoBundle 'digitaltoad/vim-jade'
+" NeoBundle 'vim-scripts/jade.vim'
 
 NeoBundleLazy 'junegunn/vim-easy-align', { 'autoload': { 'commands' : ['EasyAlign'] } }
 NeoBundleLazy "Shougo/neocomplete.vim", { "autoload": { "insert": 1 } }
@@ -46,6 +45,7 @@ NeoBundleLazy "vim-scripts/TaskList.vim", { "autoload": { "mappings": ['<Plug>Ta
 NeoBundleLazy 'mattn/emmet-vim', { "autoload":  {"filetypes": ['html', 'php'] } }
 NeoBundleLazy 'hail2u/vim-css3-syntax', { "autoload": { "filetypes": ['css'] } }
 NeoBundleLazy 'taichouchou2/html5.vim', { "autoload": { "filetypes": ['html', 'php'] } }
+NeoBundleLazy 'digitaltoad/vim-jade', { "autoload": { "filetypes": ['jade'] } }
 NeoBundleLazy 'jelera/vim-javascript-syntax', { 'autoload':{ 'filetypes':['javascript'] } }
 NeoBundleLazy "Shougo/unite.vim", { "autoload": { "commands": ["Unite", "UniteWithBufferDir"] } }
 NeoBundleLazy 'h1mesuke/unite-outline', { "autoload": { "unite_sources": ["outline"], } }
@@ -171,9 +171,8 @@ vnoremap <silent> < <gv
 set infercase           " 補完時に大文字小文字を区別しない
 set matchpairs& matchpairs+=<:>   " 対応括弧に'<'と'>'のペアを追加
 set wildchar=<tab>
-set wildmode=list:longest,full
+set wildmode=longest,full
 set shiftwidth=2
-
 
 "----------------------------------------------------
 " 検索
@@ -197,6 +196,9 @@ au BufNewFile,BufRead *.slim set filetype=slim
 au BufNewFile,BufRead *.ejs.* set filetype=jst
 au BufNewFile,BufRead *.ejs set filetype=jst
 au BufNewFile,BufRead *.pde setf processing↲
+au BufNewFile,BufRead *.jade set filetype=jade
+au BufNewFile,BufRead *.jade set tabstop=2 shiftwidth=2 expandtab
+
 
 "----------------------------------------------------
 " キーマッピング
