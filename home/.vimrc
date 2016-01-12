@@ -70,6 +70,7 @@ NeoBundleLazy "thinca/vim-quickrun", {
 \   "mappings": [['nxo', '<Plug>(quickrun)']]
 \ }}
 
+if has('mac')
 NeoBundleLazy 'OmniSharp/omnisharp-vim', {
 \   'autoload': { 'filetypes': [ 'cs', 'csi', 'csx' ] },
 \   'build': {
@@ -78,6 +79,7 @@ NeoBundleLazy 'OmniSharp/omnisharp-vim', {
 \     'unix': 'xbuild server/OmniSharp.sln',
 \   },
 \ }
+endif
 
 NeoBundleLazy 'OrangeT/vim-csharp', { 'autoload': { 'filetypes': [ 'cs', 'csi', 'csx' ] } }
 
@@ -95,7 +97,8 @@ set encoding=utf-8
 set fileencodings=utf-8,ucs-bom,iso-2022-jp-3,iso-2022-jp,eucjp-ms,euc-jisx0213,euc-jp,sjis,cp932
 set termencoding=utf-8
 " scriptencoding utf-8
-set clipboard+=unnamed,autoselect
+" set clipboard+=unnamed,autoselect
+set clipboard=unnamedplus
 set vb t_vb=    " ビープ音を鳴らさない
 
  "----------------------------------------------------
@@ -156,7 +159,8 @@ set smartindent
 "自動インデントを有効にする
 set smartindent
 set autoindent
-set tabstop=2 
+set tabstop=2
+set shiftwidth=2
 set shiftround          " '<'や'>'でインデントする際に'shiftwidth'の倍数に丸める
 set cindent
 set expandtab
