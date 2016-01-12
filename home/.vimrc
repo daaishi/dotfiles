@@ -44,7 +44,7 @@ NeoBundleLazy "sjl/gundo.vim", { "autoload": { "commands": ['GundoToggle'], } }
 NeoBundleLazy "vim-scripts/TaskList.vim", { "autoload": { "mappings": ['<Plug>TaskList'] } }
 NeoBundleLazy 'mattn/emmet-vim', { "autoload":  {"filetypes": ['html', 'php'] } }
 NeoBundleLazy 'hail2u/vim-css3-syntax', { "autoload": { "filetypes": ['css'] } }
-NeoBundleLazy 'taichouchou2/html5.vim', { "autoload": { "filetypes": ['html', 'php'] } }
+" NeoBundleLazy 'taichouchou2/html5.vim', { "autoload": { "filetypes": ['html', 'php'] } }
 NeoBundleLazy 'digitaltoad/vim-jade', { "autoload": { "filetypes": ['jade'] } }
 NeoBundleLazy 'jelera/vim-javascript-syntax', { 'autoload':{ 'filetypes':['javascript'] } }
 NeoBundleLazy "Shougo/unite.vim", { "autoload": { "commands": ["Unite", "UniteWithBufferDir"] } }
