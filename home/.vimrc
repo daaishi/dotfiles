@@ -143,7 +143,7 @@ set cursorline      " カーソルを表示
 set virtualedit=all     " カーソルを文字が存在しない部分でも動けるようにする
 set wrap                " 長いテキストの折り返し
 " set textwidth=0         " 自動的に改行が入るのを無効化
-set colorcolumn=80      " その代わり80文字目にラインを入れる
+" set colorcolumn=80      " その代わり80文字目にラインを入れる
 set novisualbell    " 前時代的スクリーンベルを無効化
 set ruler
 set list                " 不可視文字の可視化
