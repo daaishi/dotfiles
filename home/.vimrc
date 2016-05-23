@@ -1,7 +1,8 @@
 if has('vim_starting')
-  " if &compatible
-""    set nocompatible               " Be iMproved
-  " endif
+   if &compatible
+    set nocompatible               " Be iMproved
+   endif
+
   set runtimepath+=~/.vim/bundle/neobundle.vim/
 endif
 
@@ -94,9 +95,12 @@ NeoBundleCheck
 "----------------------------------------------------
 " 基本的な設定
 "----------------------------------------------------
-set ffs=unix,dos,mac
+"set ffs=unix,dos,mac
+"set encoding=utf-8
+"set fileencodings=utf-8,ucs-bom,iso-2022-jp-3,iso-2022-jp,eucjp-ms,euc-jisx0213,euc-jp,sjis,cp932
 set encoding=utf-8
-set fileencodings=utf-8,ucs-bom,iso-2022-jp-3,iso-2022-jp,eucjp-ms,euc-jisx0213,euc-jp,sjis,cp932
+set fileencodings=iso-2022-jp,euc-jp,sjis,utf-8
+set fileformats=unix,dos,mac
 set termencoding=utf-8
 " scriptencoding utf-8
 if has('mac')
@@ -144,7 +148,7 @@ set showmatch       " 括弧入力時の対応する括弧を表示
 set matchtime=3     " 対応する括弧の表示時間を2にする
 set matchpairs=(:),{:},[:],<:>  " 強調する括弧のパターン
 set wildmenu        " コマンドライン補完を拡張モードにする
-set cursorline      " カーソルを表示
+" set cursorline      " カーソルを表示
 set virtualedit=all     " カーソルを文字が存在しない部分でも動けるようにする
 set wrap                " 長いテキストの折り返し
 " set textwidth=0         " 自動的に改行が入るのを無効化
@@ -153,8 +157,8 @@ set novisualbell    " 前時代的スクリーンベルを無効化
 set ruler
 set list                " 不可視文字の可視化
 set listchars=tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%
-highlight CursorLine cterm=underline ctermfg=NONE ctermbg=NONE
-highlight CursorLine gui=underline guifg=NONE guibg=NONE
+" highlight CursorLine cterm=underline ctermfg=NONE ctermbg=NONE
+" highlight CursorLine gui=underline guifg=NONE guibg=NONE
 set ambiwidth=double
 hi CursorLineNr term=bold   cterm=NONE ctermfg=228 ctermbg=NONE
 
