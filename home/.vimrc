@@ -38,6 +38,7 @@ NeoBundle "tyru/caw.vim.git"
 " NeoBundle 'digitaltoad/vim-jade'
 " NeoBundle 'vim-scripts/jade.vim'
 
+NeoBundleLazy 'tikhomirov/vim-glsl', { 'autoload': { 'filetypes': ['vert', 'frag'] } }
 NeoBundleLazy 'junegunn/vim-easy-align', { 'autoload': { 'commands' : ['EasyAlign'] } }
 NeoBundleLazy "Shougo/neocomplete.vim", { "autoload": { "insert": 1 } }
 NeoBundleLazy 'Shougo/neosnippet.vim', { "autoload": { "insert": 1 } }
@@ -155,6 +156,7 @@ set listchars=tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%
 highlight CursorLine cterm=underline ctermfg=NONE ctermbg=NONE
 highlight CursorLine gui=underline guifg=NONE guibg=NONE
 set ambiwidth=double
+hi CursorLineNr term=bold   cterm=NONE ctermfg=228 ctermbg=NONE
 
 "----------------------------------------------------
 " インデント
@@ -206,7 +208,7 @@ au BufNewFile,BufRead *.ejs set filetype=jst
 au BufNewFile,BufRead *.pde setf processing↲
 au BufNewFile,BufRead *.jade set filetype=jade
 au BufNewFile,BufRead *.jade set tabstop=2 shiftwidth=2 expandtab
-
+au BufNewFile,BufRead *.rabl set filetype=ruby
 
 "----------------------------------------------------
 " キーマッピング
@@ -599,7 +601,7 @@ let s:hooks = neobundle#get_hooks("unite.vim")
 
 function! s:hooks.on_source(bundle)
   " start unite in insert mode
-  let g:unite_enable_start_insert = 1
+  " let g:unite_enable_start_insert = 1
   " use vimfiler to open directory
   call unite#custom_default_action("source/bookmark/directory", "vimfiler")
   call unite#custom_default_action("directory", "vimfiler")
@@ -622,11 +624,11 @@ autocmd MyAutoCmd BufEnter * if (winnr('$') == 1 && &filetype ==# 'vimfiler') | 
 
 let s:hooks = neobundle#get_hooks("vimfiler")
 
-let g:vimfiler_edit_action = 'tabopen'
+" let g:vimfiler_edit_action = 'tabopen'
 
 function! s:hooks.on_source(bundle)
   let g:vimfiler_as_default_explorer = 1
-  let g:vimfiler_enable_auto_cd = 1
+  " let g:vimfiler_enable_auto_cd = 1
   " .から始まるファイルおよび.pycで終わるファイルを不可視パターンに
   let g:vimfiler_ignore_pattern = "\%(^\..*\|\.pyc$\)"
   " vimfiler specific key mappings
@@ -673,3 +675,4 @@ endfunction
 " vim-hybrid
 "----------------------------------------------------
 ""colorscheme hybrid
+
