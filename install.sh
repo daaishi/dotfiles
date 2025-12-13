@@ -48,6 +48,79 @@ if [ ! -d "$OH_MY_ZSH_DIR/custom/plugins/zsh-syntax-highlighting" ]; then
   echo "   .zshrcのpluginsに 'zsh-syntax-highlighting' を追加してください"
 fi
 
+# AWS設定のセットアップ
+echo ""
+echo "☁️  AWS設定をセットアップします..."
+
+# AWS CLIのインストール確認
+if ! command -v aws &> /dev/null; then
+  echo "📦 AWS CLIがインストールされていません。インストールします..."
+  
+  # Homebrewがインストールされているか確認
+  if ! command -v brew &> /dev/null; then
+    echo "❌ Homebrewがインストールされていません"
+    echo "   Homebrewをインストールしてから、以下を実行してください:"
+    echo "   brew install awscli"
+    echo ""
+    echo "   または、AWS公式のインストーラーを使用してください:"
+    echo "   https://aws.amazon.com/cli/"
+  else
+    echo "   HomebrewでAWS CLIをインストールします..."
+    brew install awscli
+    echo "✅ AWS CLIのインストールが完了しました"
+  fi
+else
+  echo "✅ AWS CLIがインストールされています ($(aws --version))"
+fi
+
+# ~/.awsディレクトリの作成
+if [ ! -d "$HOME/.aws" ]; then
+  mkdir -p "$HOME/.aws"
+  echo "✅ ~/.awsディレクトリを作成しました"
+fi
+
+# AWS configのシンボリックリンク作成
+if [ -f "$HOME/.aws/config" ] && [ ! -L "$HOME/.aws/config" ]; then
+  echo "⚠️  $HOME/.aws/configが既に存在します。バックアップを作成します..."
+  mv "$HOME/.aws/config" "$HOME/.aws/config.backup.$(date +%Y%m%d_%H%M%S)"
+fi
+
+if [ ! -L "$HOME/.aws/config" ]; then
+  echo "🔗 AWS configのシンボリックリンクを作成します..."
+  ln -sf "$DOTFILES_DIR/aws/config" "$HOME/.aws/config"
+  echo "✅ AWS configのシンボリックリンクを作成しました"
+else
+  echo "✅ AWS configのシンボリックリンクは既に存在します"
+fi
+
+# AWS認証情報取得スクリプトのセットアップ
+if [ -f "$HOME/.aws/get-credentials.sh" ] && [ ! -L "$HOME/.aws/get-credentials.sh" ]; then
+  echo "⚠️  $HOME/.aws/get-credentials.shが既に存在します。バックアップを作成します..."
+  mv "$HOME/.aws/get-credentials.sh" "$HOME/.aws/get-credentials.sh.backup.$(date +%Y%m%d_%H%M%S)"
+fi
+
+if [ ! -L "$HOME/.aws/get-credentials.sh" ]; then
+  echo "🔗 AWS認証情報取得スクリプトのシンボリックリンクを作成します..."
+  ln -sf "$DOTFILES_DIR/aws/get-credentials.sh" "$HOME/.aws/get-credentials.sh"
+  chmod +x "$HOME/.aws/get-credentials.sh"
+  echo "✅ AWS認証情報取得スクリプトのシンボリックリンクを作成しました"
+else
+  echo "✅ AWS認証情報取得スクリプトのシンボリックリンクは既に存在します"
+fi
+
+# 1Password CLIの確認
+if command -v op &> /dev/null; then
+  echo "✅ 1Password CLIがインストールされています"
+  if op whoami &> /dev/null; then
+    echo "✅ 1Passwordにサインイン済みです"
+  else
+    echo "⚠️  1Passwordにサインインしてください: op signin"
+  fi
+else
+  echo "⚠️  1Password CLIがインストールされていません"
+  echo "   Homebrewでインストール: brew install --cask 1password-cli"
+fi
+
 echo ""
 echo "✨ セットアップが完了しました！"
 echo ""
@@ -58,5 +131,20 @@ echo ""
 echo "  2. オプショナルプラグインを使う場合は、.zshrcのpluginsに追加してください:"
 echo "     plugins=(git brew macos zsh-autosuggestions zsh-syntax-highlighting)"
 echo ""
-echo "  3. マシン固有の設定が必要な場合は、~/.zshrc.local を作成してください"
+echo "  3. AWS CLIのセットアップ（未インストールの場合）:"
+echo "     brew install awscli"
+echo ""
+echo "  4. 1Password CLIのセットアップ:"
+echo "     - 1Password CLIが未インストールの場合: brew install --cask 1password-cli"
+echo "     - 1Passwordにサインイン: op signin"
+echo "     - 1PasswordにAWS認証情報アイテムを作成:"
+echo "       * Private/AWS-Default (defaultプロファイル用)"
+echo "       * Private/AWS-Wonder-Screen-Dev_copilot-user (Wonder-Screen-Dev_copilot-userプロファイル用)"
+echo "       * 各アイテムに 'credential' フィールド (Access Key ID) と 'secret' フィールド (Secret Access Key) を追加"
+echo ""
+echo "  5. AWSプロファイルの切り替え:"
+echo "     aws-switch                    # 対話的にプロファイルを選択"
+echo "     aws-switch <プロファイル名>   # 直接プロファイルを指定"
+echo ""
+echo "  6. マシン固有の設定が必要な場合は、~/.zshrc.local を作成してください"
 

@@ -72,6 +72,84 @@ alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 
+# AWS設定
+export AWS_SHARED_CREDENTIALS_FILE="$HOME/.aws/credentials"
+export AWS_CONFIG_FILE="$HOME/.aws/config"
+
+# デフォルトでWonder-Screen-Dev_copilot-userプロファイルを使用
+export AWS_PROFILE="Wonder-Screen-Dev_copilot-user"
+
+# AWSエイリアス
+alias aws-profile='aws configure list-profiles'
+alias aws-whoami='aws sts get-caller-identity'
+
+# AWSプロファイル切り替え関数（aws-switchコマンド）
+aws-switch() {
+  local profiles
+  local selected_profile
+  local profile_count
+
+  # プロファイル一覧を取得
+  profiles=($(aws configure list-profiles 2>/dev/null))
+  
+  if [ ${#profiles[@]} -eq 0 ]; then
+    echo "❌ プロファイルが見つかりません"
+    return 1
+  fi
+
+  # 引数が指定されている場合
+  if [ -n "$1" ]; then
+    # プロファイルが存在するか確認
+    if printf '%s\n' "${profiles[@]}" | grep -q "^$1$"; then
+      export AWS_PROFILE="$1"
+      echo "✅ AWSプロファイルを '$1' に切り替えました"
+      echo ""
+      aws sts get-caller-identity 2>/dev/null || echo "⚠️  認証情報の取得に失敗しました。1Passwordにサインインしてください: op signin"
+      return 0
+    else
+      echo "❌ プロファイル '$1' が見つかりません"
+      echo ""
+      echo "利用可能なプロファイル:"
+      printf '  - %s\n' "${profiles[@]}"
+      return 1
+    fi
+  fi
+
+  # 対話的にプロファイルを選択
+  echo "利用可能なAWSプロファイル:"
+  echo ""
+  profile_count=1
+  for profile in "${profiles[@]}"; do
+    if [ "$profile" = "$AWS_PROFILE" ]; then
+      echo "  [$profile_count] $profile (現在選択中) ⭐"
+    else
+      echo "  [$profile_count] $profile"
+    fi
+    ((profile_count++))
+  done
+  echo ""
+  echo -n "プロファイルを選択してください [1-${#profiles[@]}]: "
+  read -r selection
+
+  # 選択が有効か確認
+  if ! [[ "$selection" =~ ^[0-9]+$ ]] || [ "$selection" -lt 1 ] || [ "$selection" -gt ${#profiles[@]} ]; then
+    echo "❌ 無効な選択です"
+    return 1
+  fi
+
+  selected_profile="${profiles[$selection]}"
+  export AWS_PROFILE="$selected_profile"
+  echo ""
+  echo "✅ AWSプロファイルを '$selected_profile' に切り替えました"
+  echo ""
+  aws sts get-caller-identity 2>/dev/null || echo "⚠️  認証情報の取得に失敗しました。1Passwordにサインインしてください: op signin"
+}
+
+# 後方互換性のため、aws-profile-setも残す
+aws-profile-set() {
+  aws-switch "$@"
+}
+
 # カスタム関数
 # 例: ディレクトリサイズを表示
 ds() {

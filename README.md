@@ -52,6 +52,8 @@ touch ~/.zshrc.local
 
 - `.zshrc` - メインのzsh設定ファイル（oh-my-zsh使用）
 - `install.sh` - セットアップスクリプト
+- `aws/config` - AWS CLI設定ファイル（プロファイル設定）
+- `aws/get-credentials.sh` - 1Password CLIから認証情報を取得するスクリプト
 - `.gitignore` - Gitで無視するファイル
 - `README.md` - このファイル
 
@@ -104,6 +106,96 @@ plugins=(git brew macos 新しいプラグイン名)
 ### カスタム関数の追加
 
 `.zshrc`の「カスタム関数」セクションに追加してください。
+
+## AWS設定
+
+### 前提条件
+
+#### AWS CLIのインストール
+
+AWS CLIがインストールされていない場合、`install.sh`が自動的にインストールを試みます。手動でインストールする場合：
+
+```bash
+# Homebrewを使用（推奨）
+brew install awscli
+
+# または、AWS公式インストーラーを使用
+# https://aws.amazon.com/cli/
+```
+
+### 1Password CLI統合
+
+AWS認証情報は1Password CLIで管理されます。認証情報をファイルに保存する必要はありません。
+
+#### セットアップ
+
+1. **1Password CLIのインストール**（未インストールの場合）:
+   ```bash
+   brew install --cask 1password-cli
+   ```
+
+2. **1Passwordにサインイン**:
+   ```bash
+   op signin
+   ```
+
+3. **1PasswordにAWS認証情報アイテムを作成**:
+   
+   各AWSプロファイルごとに、1Passwordに以下のアイテムを作成してください：
+   - **Vault**: Private（または任意のVault名）
+   - **アイテム名**: `AWS-<プロファイル名>`
+     - 例: `AWS-Default`
+     - 例: `AWS-Wonder-Screen-Dev_copilot-user`
+   - **フィールド**:
+     - `credential` - AWS Access Key ID
+     - `secret` - AWS Secret Access Key
+
+   1Password CLIで作成する場合:
+   ```bash
+   op item create \
+     --category "Secure Note" \
+     --title "AWS-Wonder-Screen-Dev_copilot-user" \
+     --vault Private \
+     credential="YOUR_ACCESS_KEY_ID" \
+     secret="YOUR_SECRET_ACCESS_KEY"
+   ```
+
+### プロファイル管理
+
+デフォルトで`Wonder-Screen-Dev_copilot-user`プロファイルが使用されます。
+
+#### 利用可能なコマンド
+
+- `aws-switch` - 対話的にプロファイルを切り替え
+- `aws-switch <プロファイル名>` - 指定したプロファイルに切り替え
+- `aws-profile` - 利用可能なプロファイル一覧を表示
+- `aws-whoami` - 現在のAWSアカウント情報を表示
+
+#### プロファイルの切り替え
+
+```bash
+# 対話的にプロファイルを選択
+aws-switch
+
+# 直接プロファイルを指定
+aws-switch Wonder-Screen-Dev_copilot-user
+aws-switch default
+```
+
+#### 新しいプロファイルの追加
+
+1. `aws/config`にプロファイルを追加:
+   ```ini
+   [profile 新しいプロファイル名]
+   region = ap-northeast-1
+   output = json
+   credential_process = ~/.aws/get-credentials.sh
+   ```
+
+2. 1Passwordに認証情報アイテムを作成:
+   - アイテム名: `AWS-新しいプロファイル名`
+   - Vault: Private
+   - フィールド: `credential` と `secret`
 
 ## 更新
 
