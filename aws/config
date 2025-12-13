@@ -6,17 +6,17 @@
 [default]
 region = ap-northeast-1
 output = json
-credential_process = AWS_PROFILE=default ~/.aws/get-credentials.sh
+credential_process = /bin/sh -c 'AWS_PROFILE=default exec "$HOME/.aws/get-credentials.sh"'
 
 # Wonder-Screen-Dev_copilot-user プロファイル
 [profile Wonder-Screen-Dev_copilot-user]
 region = ap-northeast-1
 output = json
-credential_process = AWS_PROFILE=Wonder-Screen-Dev_copilot-user ~/.aws/get-credentials.sh
+credential_process = /bin/sh -c 'AWS_PROFILE=Wonder-Screen-Dev_copilot-user exec "$HOME/.aws/get-credentials.sh"'
 
 # 他のプロファイルを追加する場合は、以下の形式で追加してください：
 # [profile プロファイル名]
 # region = ap-northeast-1
 # output = json
-# credential_process = AWS_PROFILE=プロファイル名 ~/.aws/get-credentials.sh
+# credential_process = /bin/sh -c 'AWS_PROFILE=プロファイル名 exec "$HOME/.aws/get-credentials.sh"'
 
