@@ -73,6 +73,24 @@ else
   echo "✅ AWS CLIがインストールされています ($(aws --version))"
 fi
 
+# AWS Copilot CLIのインストール確認
+if ! command -v copilot &> /dev/null; then
+  echo "📦 AWS Copilot CLIがインストールされていません。インストールします..."
+  
+  # Homebrewがインストールされているか確認
+  if ! command -v brew &> /dev/null; then
+    echo "❌ Homebrewがインストールされていません"
+    echo "   Homebrewをインストールしてから、以下を実行してください:"
+    echo "   brew install aws/tap/copilot-cli"
+  else
+    echo "   HomebrewでAWS Copilot CLIをインストールします..."
+    brew install aws/tap/copilot-cli
+    echo "✅ AWS Copilot CLIのインストールが完了しました"
+  fi
+else
+  echo "✅ AWS Copilot CLIがインストールされています ($(copilot --version))"
+fi
+
 # ~/.awsディレクトリの作成
 if [ ! -d "$HOME/.aws" ]; then
   mkdir -p "$HOME/.aws"
