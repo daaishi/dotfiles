@@ -54,6 +54,8 @@ touch ~/.zshrc.local
 - `install.sh` - セットアップスクリプト
 - `aws/config` - AWS CLI設定ファイル（プロファイル設定）
 - `aws/get-credentials.sh` - 1Password CLIから認証情報を取得するスクリプト
+- `aws/rds-port-forward.sh` - ECSタスクからRDSへのポートフォワーディングスクリプト（汎用）
+- `aws/rds-port-forward-wonder-screen-cms-prototype.sh` - Wonder Screen CMS (prototype環境) 用のポートフォワーディングスクリプト
 - `.gitignore` - Gitで無視するファイル
 - `README.md` - このファイル
 
@@ -196,6 +198,70 @@ aws-switch default
    - アイテム名: `AWS-新しいプロファイル名`
    - Vault: Private
    - フィールド: `credential` と `secret`
+
+### RDSポートフォワーディング
+
+ECSタスク経由でRDSデータベースにポートフォワーディング接続する場合、`aws/rds-port-forward.sh`を使用できます。
+
+#### 使用方法
+
+##### 方法1: 環境別スクリプトを使用（推奨）
+
+環境ごとに設定済みのスクリプトを使用する場合：
+
+```bash
+# Wonder Screen CMS (prototype環境)
+~/dotfiles/aws/rds-port-forward-wonder-screen-cms-prototype.sh
+```
+
+環境別スクリプトは、環境変数の設定が含まれているため、そのまま実行できます。
+
+##### 方法2: 汎用スクリプトを使用
+
+環境変数を設定して汎用スクリプトを実行します：
+
+```bash
+export APP_NAME="wonder-screen-cms"
+export ENV_NAME="prototype"
+export SVC_NAME="api"  # オプション（デフォルト: api）
+export DB_HOST="your-rds-host.cluster-xxxxx.ap-northeast-1.rds.amazonaws.com"
+export LOCAL_PORT="3307"  # オプション（デフォルト: 3307）
+
+~/dotfiles/aws/rds-port-forward.sh
+```
+
+または、環境変数を直接指定：
+
+```bash
+APP_NAME="wonder-screen-cms" \
+ENV_NAME="prototype" \
+DB_HOST="your-rds-host.cluster-xxxxx.ap-northeast-1.rds.amazonaws.com" \
+~/dotfiles/aws/rds-port-forward.sh
+```
+
+##### 新しい環境用スクリプトの作成
+
+新しい環境用のスクリプトを作成する場合、`aws/rds-port-forward-wonder-screen-cms-prototype.sh`を参考にしてください：
+
+```bash
+#!/bin/bash
+# ~/dotfiles/aws/rds-port-forward-<app-name>-<env-name>.sh
+
+set -euo pipefail
+
+export APP_NAME="your-app-name"
+export ENV_NAME="your-env-name"
+export SVC_NAME="api"  # 必要に応じて変更
+export DB_HOST="your-rds-host.cluster-xxxxx.ap-northeast-1.rds.amazonaws.com"
+export LOCAL_PORT="3307"  # 必要に応じて変更
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "$SCRIPT_DIR/rds-port-forward.sh"
+```
+
+接続後、ローカルの`127.0.0.1:3307`（または指定したポート）でRDSデータベースにアクセスできます。
+
+**注意**: ポートフォワーディングセッションは、ターミナルを開いている間のみ有効です。終了する場合は`Ctrl+C`を押してください。
 
 ## 更新
 
