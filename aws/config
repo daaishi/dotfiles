@@ -44,3 +44,18 @@ sso_account_id = 972588015875
 sso_role_name = Administrator
 region = ap-northeast-1
 output = json
+
+[profile ws-proto]
+sso_session = ws-sso
+sso_account_id = 095055158903
+sso_role_name = Administrator
+region = ap-northeast-1
+output = json
+
+# デフォルトプロファイル (ws-protoを使用)
+[default]
+sso_session = ws-sso
+sso_account_id = 095055158903
+sso_role_name = Administrator
+region = ap-northeast-1
+output = json

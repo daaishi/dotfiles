@@ -39,6 +39,9 @@ plugins=(
 # oh-my-zshを読み込む
 source $ZSH/oh-my-zsh.sh
 
+# プロンプトにAWSプロファイルを表示（テーマ読み込み後に設定）
+PROMPT='$(aws_prompt_info)%(?:%{$fg_bold[green]%}➜ :%{$fg_bold[red]%}➜ ) %{$fg[cyan]%}%c%{$reset_color%} $(git_prompt_info)'
+
 # ユーザー設定
 
 # 履歴設定
@@ -133,8 +136,19 @@ alias path='echo $PATH | tr ":" "\n"'  # パスを改行区切りで表示
 export AWS_SHARED_CREDENTIALS_FILE="$HOME/.aws/credentials"
 export AWS_CONFIG_FILE="$HOME/.aws/config"
 
-# デフォルトでSSOプロファイルを使用
-export AWS_PROFILE="wonder-screen-sso"
+# デフォルトでSSOプロファイルを使用（明示的に設定）
+# 新しいターミナルでは常に ws-proto を使用
+if [ -z "$AWS_PROFILE" ] || [[ "$AWS_PROFILE" == *"copilot"* ]] || [[ "$AWS_PROFILE" == *"Wonder-Screen-Dev"* ]]; then
+  export AWS_PROFILE="ws-proto"
+fi
+
+# AWSプロファイルをプロンプトに表示する関数
+aws_prompt_info() {
+  local profile="${AWS_PROFILE:-default}"
+  if [ -n "$profile" ]; then
+    echo "%{$fg_bold[yellow]%}[AWS: $profile]%{$reset_color%} "
+  fi
+}
 
 # AWSエイリアス
 alias aws-profile='aws configure list-profiles'
