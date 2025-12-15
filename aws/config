@@ -1,22 +1,46 @@
 # ~/dotfiles/aws/config
 # AWS CLI設定ファイル
-# 認証情報は1Password CLIで管理されます
 
-# デフォルトプロファイル
-[default]
+# AWS SSO Configuration
+# ---------------------------------------------------------
+
+# SSOセッション定義
+[sso-session ws-sso]
+sso_start_url = https://d-9667642d60.awsapps.com/start
+sso_region = ap-southeast-1
+sso_registration_scopes = sso:account:access
+
+# Wonder-Screen (Existing) - 現行運用・開発
+# 用途: prototype, dev, demo, prod (Laravel/Legacy)
+[profile ws-wonder-screen]
+sso_session = ws-sso
+sso_account_id = 871711796323
+sso_role_name = Administrator
+region = ap-southeast-1
+output = json
+
+# WS-Workload-JP (New) - 新・日本本番環境
+# 用途: prod-jp (Laravel/Go)
+[profile ws-jp]
+sso_session = ws-sso
+sso_account_id = 858364567814
+sso_role_name = Administrator
 region = ap-northeast-1
 output = json
-credential_process = /bin/sh -c 'AWS_PROFILE=default exec "$HOME/.aws/get-credentials.sh"'
 
-# Wonder-Screen-Dev_copilot-user プロファイル
-[profile Wonder-Screen-Dev_copilot-user]
+# WS-Workload-Global (New) - 新・海外本番環境
+# 用途: prod-id, prod-vn, prod-kh (Laravel/Go)
+[profile ws-global]
+sso_session = ws-sso
+sso_account_id = 803946367107
+sso_role_name = Administrator
+region = ap-southeast-1
+output = json
+
+# Wonder-Screen-Dev (検証用)
+[profile wonder-screen-dev]
+sso_session = ws-sso
+sso_account_id = 972588015875
+sso_role_name = Administrator
 region = ap-northeast-1
 output = json
-credential_process = /bin/sh -c 'AWS_PROFILE=Wonder-Screen-Dev_copilot-user exec "$HOME/.aws/get-credentials.sh"'
-
-# 他のプロファイルを追加する場合は、以下の形式で追加してください：
-# [profile プロファイル名]
-# region = ap-northeast-1
-# output = json
-# credential_process = /bin/sh -c 'AWS_PROFILE=プロファイル名 exec "$HOME/.aws/get-credentials.sh"'
-

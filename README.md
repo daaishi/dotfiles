@@ -53,7 +53,6 @@ touch ~/.zshrc.local
 - `.zshrc` - メインのzsh設定ファイル（oh-my-zsh使用）
 - `install.sh` - セットアップスクリプト
 - `aws/config` - AWS CLI設定ファイル（プロファイル設定）
-- `aws/get-credentials.sh` - 1Password CLIから認証情報を取得するスクリプト
 - `aws/rds-port-forward.sh` - ECSタスクからRDSへのポートフォワーディングスクリプト（汎用）
 - `aws/rds-port-forward-wonder-screen-cms-prototype.sh` - Wonder Screen CMS (prototype環境) 用のポートフォワーディングスクリプト
 - `.gitignore` - Gitで無視するファイル
@@ -120,51 +119,33 @@ AWS CLIがインストールされていない場合、`install.sh`が自動的�
 ```bash
 # Homebrewを使用（推奨）
 brew install awscli
-
-# または、AWS公式インストーラーを使用
-# https://aws.amazon.com/cli/
 ```
 
-### 1Password CLI統合
+### SSO認証 (IAM Identity Center)
 
-AWS認証情報は1Password CLIで管理されます。認証情報をファイルに保存する必要はありません。
+AWS認証はSSO (IAM Identity Center) を使用します。
 
 #### セットアップ
 
-1. **1Password CLIのインストール**（未インストールの場合）:
-   ```bash
-   brew install --cask 1password-cli
-   ```
+`aws/config` にSSO設定が含まれています。初回利用時やセッション切れの際はログインが必要です。
 
-2. **1Passwordにサインイン**:
-   ```bash
-   op signin
-   ```
+#### ログイン
 
-3. **1PasswordにAWS認証情報アイテムを作成**:
-   
-   各AWSプロファイルごとに、1Passwordに以下のアイテムを作成してください：
-   - **Vault**: Private（または任意のVault名）
-   - **アイテム名**: `AWS-<プロファイル名>`
-     - 例: `AWS-Default`
-     - 例: `AWS-Wonder-Screen-Dev_copilot-user`
-   - **フィールド**:
-     - `credential` - AWS Access Key ID
-     - `secret` - AWS Secret Access Key
+```bash
+aws sso login
+```
 
-   1Password CLIで作成する場合:
-   ```bash
-   op item create \
-     --category "Secure Note" \
-     --title "AWS-Wonder-Screen-Dev_copilot-user" \
-     --vault Private \
-     credential="YOUR_ACCESS_KEY_ID" \
-     secret="YOUR_SECRET_ACCESS_KEY"
-   ```
+ブラウザが起動し、許可を求められます。「Allow」をクリックしてください。
+
+#### 認証確認
+
+```bash
+aws sts get-caller-identity
+```
 
 ### プロファイル管理
 
-デフォルトで`Wonder-Screen-Dev_copilot-user`プロファイルが使用されます。
+デフォルトで `wonder-screen-sso` プロファイルが使用されます。
 
 #### 利用可能なコマンド
 
@@ -172,6 +153,7 @@ AWS認証情報は1Password CLIで管理されます。認証情報をファイ�
 - `aws-switch <プロファイル名>` - 指定したプロファイルに切り替え
 - `aws-profile` - 利用可能なプロファイル一覧を表示
 - `aws-whoami` - 現在のAWSアカウント情報を表示
+- `aws-check-auth` - 認証状態を確認し、必要ならログインを促します
 
 #### プロファイルの切り替え
 
@@ -180,7 +162,7 @@ AWS認証情報は1Password CLIで管理されます。認証情報をファイ�
 aws-switch
 
 # 直接プロファイルを指定
-aws-switch Wonder-Screen-Dev_copilot-user
+aws-switch wonder-screen-sso
 aws-switch default
 ```
 
@@ -189,15 +171,12 @@ aws-switch default
 1. `aws/config`にプロファイルを追加:
    ```ini
    [profile 新しいプロファイル名]
+   sso_session = ws-sso
+   sso_account_id = <アカウントID>
+   sso_role_name = <ロール名>
    region = ap-northeast-1
    output = json
-   credential_process = ~/.aws/get-credentials.sh
    ```
-
-2. 1Passwordに認証情報アイテムを作成:
-   - アイテム名: `AWS-新しいプロファイル名`
-   - Vault: Private
-   - フィールド: `credential` と `secret`
 
 ### RDSポートフォワーディング
 

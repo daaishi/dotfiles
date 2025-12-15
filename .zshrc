@@ -133,113 +133,41 @@ alias path='echo $PATH | tr ":" "\n"'  # パスを改行区切りで表示
 export AWS_SHARED_CREDENTIALS_FILE="$HOME/.aws/credentials"
 export AWS_CONFIG_FILE="$HOME/.aws/config"
 
-# デフォルトでWonder-Screen-Dev_copilot-userプロファイルを使用
-export AWS_PROFILE="Wonder-Screen-Dev_copilot-user"
+# デフォルトでSSOプロファイルを使用
+export AWS_PROFILE="wonder-screen-sso"
 
 # AWSエイリアス
 alias aws-profile='aws configure list-profiles'
 alias aws-whoami='aws sts get-caller-identity'
 
-# プロファイル名から1Passwordアイテム名を取得（共通関数）
-_aws_get_item_name() {
-  local profile="$1"
-  case "$profile" in
-    "default")
-      echo "AWS-Default"
-      ;;
-    "Wonder-Screen-Dev_copilot-user")
-      echo "Wonder-Screen-Dev_copilot-user"
-      ;;
-    *)
-      echo "$profile"
-      ;;
-  esac
-}
-
-# AWS認証情報の診断関数
+# AWS SSO認証チェック関数
 aws-check-auth() {
   local profile="${AWS_PROFILE:-default}"
-  local item_name
-  local vaults=("Dev" "Private")
-  local access_key_fields=("access key id" "credential")
-  local secret_key_fields=("secret access key" "secret")
   
-  item_name=$(_aws_get_item_name "$profile")
-
-  echo "🔍 AWS認証情報の診断 (プロファイル: $profile)"
+  echo "🔍 AWS SSO認証状態の確認 (プロファイル: $profile)"
   echo ""
 
-  # 1Password CLIの確認
-  if ! command -v op &> /dev/null; then
-    echo "❌ 1Password CLIがインストールされていません"
-    echo "   インストール: brew install --cask 1password-cli"
-    return 1
-  fi
-  echo "✅ 1Password CLIがインストールされています"
-
-  # 1Passwordのサインイン状態確認
-  if ! op whoami &> /dev/null; then
-    echo "❌ 1Passwordにサインインしていません"
-    echo "   サインイン: op signin"
-    return 1
-  fi
-  echo "✅ 1Passwordにサインイン済み ($(op whoami))"
-
-  # 1Passwordアイテムの確認
-  echo ""
-  echo "📦 1Passwordアイテムの確認:"
-  local found_vault=""
-  local access_key_field=""
-  local secret_key_field=""
-  
-  # ボルトとフィールドの組み合わせを確認
-  for vault in "${vaults[@]}"; do
-    for access_field in "${access_key_fields[@]}"; do
-      for secret_field in "${secret_key_fields[@]}"; do
-        if op read "op://${vault}/${item_name}/${access_field}" 2>/dev/null | grep -q . && \
-           op read "op://${vault}/${item_name}/${secret_field}" 2>/dev/null | grep -q .; then
-          found_vault="$vault"
-          access_key_field="$access_field"
-          secret_key_field="$secret_field"
-          break 3
-        fi
-      done
-    done
-  done
-  
-  if [ -n "$found_vault" ]; then
-    echo "✅ アイテム '${found_vault}/${item_name}' が見つかりました"
-    echo "✅ 必要なフィールドが見つかりました:"
-    echo "   - Access Key ID: '${access_key_field}'"
-    echo "   - Secret Access Key: '${secret_key_field}'"
-  else
-    echo "❌ アイテム '$item_name' が見つかりません"
-    echo "   DevボルトとPrivateボルトの両方を確認しました"
-    echo ""
-    echo "   作成が必要です:"
-    echo "   op item create --category 'Secure Note' --title '$item_name' --vault Dev \\"
-    echo "     'access key id'='YOUR_ACCESS_KEY_ID' \\"
-    echo "     'secret access key'='YOUR_SECRET_ACCESS_KEY'"
-    return 1
-  fi
-
-  # AWS認証情報の取得テスト
-  echo ""
-  echo "🔐 AWS認証情報の取得テスト:"
+  # SSOセッションの状態確認
   if aws sts get-caller-identity &> /dev/null; then
-    echo "✅ AWS認証情報が正常に取得できました"
+    echo "✅ AWS認証情報が有効です"
     aws sts get-caller-identity
     return 0
   else
-    echo "❌ AWS認証情報の取得に失敗しました"
+    echo "❌ AWS認証情報が無効、または期限切れです"
     echo ""
-    echo "トラブルシューティング:"
-    echo "  1. 1Passwordアイテムに以下のフィールドがあるか確認:"
-    echo "     - 'access key id' (または 'credential')"
-    echo "     - 'secret access key' (または 'secret')"
-    echo "  2. アイテムが 'Dev' または 'Private' ボルトにあるか確認"
-    echo "  3. get-credentials.sh のパスを確認"
-    return 1
+    echo "SSOログインを試みます..."
+    echo "実行コマンド: aws sso login --profile $profile"
+    
+    if aws sso login --profile "$profile"; then
+      echo ""
+      echo "✅ SSOログインに成功しました"
+      aws sts get-caller-identity
+      return 0
+    else
+      echo ""
+      echo "❌ SSOログインに失敗しました"
+      return 1
+    fi
   fi
 }
 
@@ -248,7 +176,6 @@ aws-switch() {
   local profiles
   local selected_profile
   local profile_count
-  local auth_result
 
   # プロファイル一覧を取得
   profiles=($(aws configure list-profiles 2>/dev/null))
@@ -266,14 +193,7 @@ aws-switch() {
       echo "✅ AWSプロファイルを '$1' に切り替えました"
       echo ""
       # 認証情報の確認
-      if aws sts get-caller-identity &> /dev/null; then
-        aws sts get-caller-identity
-      else
-        echo "⚠️  認証情報の取得に失敗しました"
-        echo ""
-        echo "詳細な診断を実行するには: aws-check-auth"
-        echo "または、1Passwordの状態を確認: op whoami"
-      fi
+      aws-check-auth
       return 0
     else
       echo "❌ プロファイル '$1' が見つかりません"
@@ -312,14 +232,7 @@ aws-switch() {
   echo "✅ AWSプロファイルを '$selected_profile' に切り替えました"
   echo ""
   # 認証情報の確認
-  if aws sts get-caller-identity &> /dev/null; then
-    aws sts get-caller-identity
-  else
-    echo "⚠️  認証情報の取得に失敗しました"
-    echo ""
-    echo "詳細な診断を実行するには: aws-check-auth"
-    echo "または、1Passwordの状態を確認: op whoami"
-  fi
+  aws-check-auth
 }
 
 # 後方互換性のため、aws-profile-setも残す
@@ -367,6 +280,39 @@ port() {
     return 1
   fi
   lsof -i :"$1"
+}
+
+# ヘルプコマンド
+help() {
+  echo "📚 利用可能なカスタムコマンドとエイリアス"
+  echo ""
+  
+  echo "🚀 AWS関連"
+  echo "  aws-switch      : AWSプロファイルの切り替え"
+  echo "  aws-profile     : プロファイル一覧を表示"
+  echo "  aws-whoami      : 現在の認証情報を表示"
+  echo "  aws-check-auth  : SSO認証状態を確認・ログイン"
+  echo ""
+  
+  echo "🛠  ユーティリティ"
+  echo "  mkcd <dir>      : ディレクトリを作成して移動"
+  echo "  ds <dir>        : ディレクトリサイズを表示"
+  echo "  port <port>     : 指定ポートを使用中のプロセスを検索"
+  echo "  gh-open         : 現在のリポジトリをGitHubで開く"
+  echo "  reload          : 設定ファイル(.zshrc)を再読み込み"
+  echo "  path            : PATHを見やすく表示"
+  echo ""
+  
+  echo "⚡️ 短縮エイリアス"
+  echo "  ll, la, l       : lsコマンドのバリエーション"
+  echo "  .., ..., ....   : ディレクトリ階層を上がる"
+  echo "  h               : 履歴表示 (history)"
+  echo "  c               : 画面クリア (clear)"
+  echo ""
+  
+  echo "💡 Tips"
+  echo "  Ctrl+R          : 履歴検索"
+  echo "  Option+Arrows   : 単語単位で移動"
 }
 
 # 補完キャッシュディレクトリの作成
