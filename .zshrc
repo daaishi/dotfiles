@@ -112,147 +112,18 @@ fi
 # ローカルbinディレクトリ
 export PATH="$HOME/.local/bin:$PATH"
 
-# エイリアス（oh-my-zshのgitプラグインと重複するものは除く）
-alias ll='ls -alF'
-alias la='ls -A'
-alias l='ls -CF'
-alias ..='cd ..'
-alias ...='cd ../..'
-alias ....='cd ../../..'
-alias grep='grep --color=auto'
-alias fgrep='fgrep --color=auto'
-alias egrep='egrep --color=auto'
-# 安全なコマンド
-alias rm='rm -i'                  # 削除前に確認
-alias cp='cp -i'                  # 上書き前に確認
-alias mv='mv -i'                  # 上書き前に確認
-# 便利なエイリアス
-alias h='history'
-alias c='clear'
-alias reload='source ~/.zshrc'    # 設定を再読み込み
-alias path='echo $PATH | tr ":" "\n"'  # パスを改行区切りで表示
+# 分割した設定ファイルを読み込む
+# dotfilesリポジトリ内の.zshディレクトリから読み込む
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/dotfiles}"
 
-# AWS設定
-export AWS_SHARED_CREDENTIALS_FILE="$HOME/.aws/credentials"
-export AWS_CONFIG_FILE="$HOME/.aws/config"
+# AWS設定と関数
+[ -f "$DOTFILES_DIR/.zsh/aws.zsh" ] && source "$DOTFILES_DIR/.zsh/aws.zsh"
 
-# デフォルトでSSOプロファイルを使用（明示的に設定）
-# 新しいターミナルでは常に ws-proto を使用
-if [ -z "$AWS_PROFILE" ] || [[ "$AWS_PROFILE" == *"copilot"* ]] || [[ "$AWS_PROFILE" == *"Wonder-Screen-Dev"* ]]; then
-  export AWS_PROFILE="ws-proto"
-fi
+# エイリアス
+[ -f "$DOTFILES_DIR/.zsh/aliases.zsh" ] && source "$DOTFILES_DIR/.zsh/aliases.zsh"
 
-# AWSプロファイルをプロンプトに表示する関数
-aws_prompt_info() {
-  local profile="${AWS_PROFILE:-default}"
-  if [ -n "$profile" ]; then
-    echo "%{$fg_bold[yellow]%}[AWS: $profile]%{$reset_color%} "
-  fi
-}
-
-# AWSエイリアス
-alias aws-profile='aws configure list-profiles'
-alias aws-whoami='aws sts get-caller-identity'
-
-# AWS SSO認証チェック関数
-aws-check-auth() {
-  local profile="${AWS_PROFILE:-default}"
-  
-  echo "🔍 AWS SSO認証状態の確認 (プロファイル: $profile)"
-  echo ""
-
-  # SSOセッションの状態確認
-  if aws sts get-caller-identity &> /dev/null; then
-    echo "✅ AWS認証情報が有効です"
-    aws sts get-caller-identity
-    return 0
-  else
-    echo "❌ AWS認証情報が無効、または期限切れです"
-    echo ""
-    echo "SSOログインを試みます..."
-    echo "実行コマンド: aws sso login --profile $profile"
-    
-    if aws sso login --profile "$profile"; then
-      echo ""
-      echo "✅ SSOログインに成功しました"
-      aws sts get-caller-identity
-      return 0
-    else
-      echo ""
-      echo "❌ SSOログインに失敗しました"
-      return 1
-    fi
-  fi
-}
-
-# AWSプロファイル切り替え関数（aws-switchコマンド）
-aws-switch() {
-  local profiles
-  local selected_profile
-  local profile_count
-
-  # プロファイル一覧を取得
-  profiles=($(aws configure list-profiles 2>/dev/null))
-  
-  if [ ${#profiles[@]} -eq 0 ]; then
-    echo "❌ プロファイルが見つかりません"
-    return 1
-  fi
-
-  # 引数が指定されている場合
-  if [ -n "$1" ]; then
-    # プロファイルが存在するか確認
-    if printf '%s\n' "${profiles[@]}" | grep -q "^$1$"; then
-      export AWS_PROFILE="$1"
-      echo "✅ AWSプロファイルを '$1' に切り替えました"
-      echo ""
-      # 認証情報の確認
-      aws-check-auth
-      return 0
-    else
-      echo "❌ プロファイル '$1' が見つかりません"
-      echo ""
-      echo "利用可能なプロファイル:"
-      printf '  - %s\n' "${profiles[@]}"
-      return 1
-    fi
-  fi
-
-  # 対話的にプロファイルを選択
-  echo "利用可能なAWSプロファイル:"
-  echo ""
-  profile_count=1
-  for profile in "${profiles[@]}"; do
-    if [ "$profile" = "$AWS_PROFILE" ]; then
-      echo "  [$profile_count] $profile (現在選択中) ⭐"
-    else
-      echo "  [$profile_count] $profile"
-    fi
-    ((profile_count++))
-  done
-  echo ""
-  echo -n "プロファイルを選択してください [1-${#profiles[@]}]: "
-  read -r selection
-
-  # 選択が有効か確認
-  if ! [[ "$selection" =~ ^[0-9]+$ ]] || [ "$selection" -lt 1 ] || [ "$selection" -gt ${#profiles[@]} ]; then
-    echo "❌ 無効な選択です"
-    return 1
-  fi
-
-  selected_profile="${profiles[$selection]}"
-  export AWS_PROFILE="$selected_profile"
-  echo ""
-  echo "✅ AWSプロファイルを '$selected_profile' に切り替えました"
-  echo ""
-  # 認証情報の確認
-  aws-check-auth
-}
-
-# 後方互換性のため、aws-profile-setも残す
-aws-profile-set() {
-  aws-switch "$@"
-}
+# カスタム関数
+[ -f "$DOTFILES_DIR/.zsh/functions.zsh" ] && source "$DOTFILES_DIR/.zsh/functions.zsh"
 
 # キーバインド設定
 # 履歴検索で部分一致
@@ -266,68 +137,6 @@ bindkey '^A' beginning-of-line
 bindkey '^E' end-of-line
 # 補完メニューの操作
 bindkey '^[[Z' reverse-menu-complete  # Shift+Tabで逆方向に補完
-
-# カスタム関数
-# ディレクトリサイズを表示
-ds() {
-  du -sh "$@" 2>/dev/null | sort -h
-}
-
-# ディレクトリを作成して移動
-mkcd() {
-  mkdir -p "$1" && cd "$1"
-}
-
-# 現在のディレクトリをGitHubで開く（GitHub CLI使用時）
-gh-open() {
-  if command -v gh &> /dev/null; then
-    gh repo view --web
-  else
-    echo "GitHub CLI (gh) がインストールされていません"
-  fi
-}
-
-# プロセスをポート番号で検索
-port() {
-  if [ -z "$1" ]; then
-    echo "使用方法: port <ポート番号>"
-    return 1
-  fi
-  lsof -i :"$1"
-}
-
-# ヘルプコマンド
-help() {
-  echo "📚 利用可能なカスタムコマンドとエイリアス"
-  echo ""
-  
-  echo "🚀 AWS関連"
-  echo "  aws-switch      : AWSプロファイルの切り替え"
-  echo "  aws-profile     : プロファイル一覧を表示"
-  echo "  aws-whoami      : 現在の認証情報を表示"
-  echo "  aws-check-auth  : SSO認証状態を確認・ログイン"
-  echo ""
-  
-  echo "🛠  ユーティリティ"
-  echo "  mkcd <dir>      : ディレクトリを作成して移動"
-  echo "  ds <dir>        : ディレクトリサイズを表示"
-  echo "  port <port>     : 指定ポートを使用中のプロセスを検索"
-  echo "  gh-open         : 現在のリポジトリをGitHubで開く"
-  echo "  reload          : 設定ファイル(.zshrc)を再読み込み"
-  echo "  path            : PATHを見やすく表示"
-  echo ""
-  
-  echo "⚡️ 短縮エイリアス"
-  echo "  ll, la, l       : lsコマンドのバリエーション"
-  echo "  .., ..., ....   : ディレクトリ階層を上がる"
-  echo "  h               : 履歴表示 (history)"
-  echo "  c               : 画面クリア (clear)"
-  echo ""
-  
-  echo "💡 Tips"
-  echo "  Ctrl+R          : 履歴検索"
-  echo "  Option+Arrows   : 単語単位で移動"
-}
 
 # 補完キャッシュディレクトリの作成
 if [ ! -d ~/.zsh/cache ]; then
