@@ -10,6 +10,13 @@ sso_start_url = https://d-9667642d60.awsapps.com/start
 sso_region = ap-southeast-1
 sso_registration_scopes = sso:account:access
 
+[profile ws-wonder-screen-dev]
+sso_session = ws-sso
+sso_account_id = 871711796323
+sso_role_name = Administrator
+region = ap-northeast-1
+output = json
+
 # Wonder-Screen (Existing) - 現行運用・開発
 # 用途: prototype, dev, demo, prod (Laravel/Legacy)
 [profile ws-wonder-screen]
