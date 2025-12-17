@@ -44,13 +44,6 @@ sso_role_name = Administrator
 region = ap-southeast-1
 output = json
 
-# Wonder-Screen-Dev (検証用)
-[profile wonder-screen-dev]
-sso_session = ws-sso
-sso_account_id = 972588015875
-sso_role_name = Administrator
-region = ap-northeast-1
-output = json
 
 [profile ws-proto]
 sso_session = ws-sso
